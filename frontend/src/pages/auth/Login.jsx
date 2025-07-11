@@ -26,9 +26,9 @@ const Login = () => {
   useEffect(() => {
     // Redirect if already authenticated
     if (user) {
-      navigate("/")
+      navigate(from, { replace: true })
     }
-  }, [user, navigate])
+  }, [user, navigate, from])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -51,12 +51,14 @@ const Login = () => {
 
       const result = await login(license, password)
 
-      // Only navigate on successful login
-      if (result.success) {
-        navigate("/")
+      // Check if result exists and has success property
+      if (result && result.success) {
+        navigate(from, { replace: true })
+      } else {
+        setError("Login failed. Please check your credentials and try again.")
+        setLoginAttempts((prev) => prev + 1)
       }
     } catch (err) {
-      console.error("Login error:", err)
       setLoginAttempts((prev) => prev + 1)
 
       // Handle specific error types with user-friendly messages
@@ -72,14 +74,13 @@ const Login = () => {
           message.includes("wrong password") ||
           message.includes("incorrect password")
         ) {
-          errorMessage = "The password you entered is incorrect. Please try again."
+          errorMessage = "Login failed. The password you entered is incorrect."
         } else if (message.includes("account locked") || message.includes("too many attempts")) {
           errorMessage =
             "Your account has been temporarily locked due to too many failed attempts. Please try again later."
         } else if (message.includes("network") || message.includes("connection")) {
           errorMessage = "Unable to connect. Please check your internet connection and try again."
         } else {
-          // For any other specific error, use a generic but helpful message
           errorMessage = "Unable to sign in. Please check your credentials and try again."
         }
       }
@@ -157,16 +158,16 @@ const Login = () => {
                   disabled={isLoading}
                   className="focus:ring-2 focus:ring-blue-500"
                 />
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
               </div>
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Signing in...
-                  </>
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center">

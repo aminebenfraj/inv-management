@@ -677,22 +677,8 @@ const Dashboard = () => {
                 color="bg-rose-500"
                 count={orders.length}
               />
-              <FeatureCard
-                to="/masspd"
-                icon={Box}
-                title="Mass Production"
-                description="Oversee production processes, project timelines, and manufacturing workflows."
-                color="bg-indigo-500"
-                count={massProductions.length}
-              />
-              <FeatureCard
-                to="/readiness"
-                icon={FileText}
-                title="Readiness"
-                description="Track project readiness, documentation status, and completion milestones."
-                color="bg-purple-500"
-                count={readinessEntries.length}
-              />
+       
+             
             </div>
           </div>
         </div>
