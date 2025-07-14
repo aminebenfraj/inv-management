@@ -127,21 +127,7 @@ export const Navbar = ({ toggleSidebar, isSidebarOpen }) => {
                     <ShoppingCart className="w-4 h-4 mr-2" />
                     <span>Order</span>
                   </DropdownMenuItem>
-                </DropdownMenuGroup>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => navigate("/masspd/create")}>
-                    <Atom className="w-4 h-4 mr-2" />
-                    <span>Production</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/readiness/create")}>
-                    <ClipboardCheck className="w-4 h-4 mr-2" />
-                    <span>Readiness</span>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-
+                </DropdownMenuGroup>  
                 {user?.role === "admin" && (
                   <>
                     <DropdownMenuSeparator />
