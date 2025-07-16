@@ -15,9 +15,9 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getMachineById, updateMachine } from "@/apis/gestionStockApi/machineApi"
-import { Save, ArrowLeft, CheckCircle, PowerOff, Wrench, Loader2, AlertCircle } from "lucide-react"
+import { getAllFactories } from "@/apis/gestionStockApi/factoryApi"
+import { Save, ArrowLeft, CheckCircle, PowerOff, Wrench, Loader2, AlertCircle, Building2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { Toaster } from "@/components/ui/toaster"
 
 const EditMachine = () => {
   const { id } = useParams()
@@ -28,9 +28,12 @@ const EditMachine = () => {
     name: "",
     description: "",
     status: "active",
+    factory: "",
   })
   const [originalMachine, setOriginalMachine] = useState(null)
+  const [factories, setFactories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingFactories, setLoadingFactories] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [errors, setErrors] = useState({
@@ -40,15 +43,41 @@ const EditMachine = () => {
   useEffect(() => {
     if (id) {
       fetchMachine()
+      fetchFactories()
     }
   }, [id])
+
+  const fetchFactories = async () => {
+    try {
+      setLoadingFactories(true)
+      const data = await getAllFactories(1, 1000) // Get all factories
+      const factoriesArray = Array.isArray(data) ? data : data?.data ? data.data : []
+      setFactories(factoriesArray)
+    } catch (error) {
+      console.error("Failed to fetch factories:", error)
+      setFactories([])
+      toast({
+        title: "Warning",
+        description: "Failed to load factories. Factory assignment may not work properly.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingFactories(false)
+    }
+  }
 
   const fetchMachine = async () => {
     try {
       setLoading(true)
       setError(null)
       const data = await getMachineById(id)
-      setMachine(data)
+      const machineData = {
+        name: data.name || "",
+        description: data.description || "",
+        status: data.status || "active",
+        factory: data.factory?._id || "",
+      }
+      setMachine(machineData)
       setOriginalMachine(data)
     } catch (error) {
       console.error("Failed to fetch machine:", error)
@@ -58,7 +87,6 @@ const EditMachine = () => {
         title: "Error",
         description: "Failed to fetch machine details. Redirecting to machines list.",
       })
-      // Delay navigation to allow toast to be seen
       setTimeout(() => navigate("/machines"), 2000)
     } finally {
       setLoading(false)
@@ -69,10 +97,13 @@ const EditMachine = () => {
     const { name, value } = e.target
     setMachine((prev) => ({ ...prev, [name]: value }))
 
-    // Clear error when user types
     if (name === "name" && errors.name) {
       setErrors((prev) => ({ ...prev, name: "" }))
     }
+  }
+
+  const handleSelectChange = (name, value) => {
+    setMachine((prev) => ({ ...prev, [name]: value }))
   }
 
   const validateForm = () => {
@@ -97,13 +128,22 @@ const EditMachine = () => {
 
     setIsSubmitting(true)
     try {
-      await updateMachine(id, machine)
+      const updateData = {
+        name: machine.name,
+        description: machine.description,
+        status: machine.status,
+      }
+
+      if (machine.factory && machine.factory !== "none") {
+        updateData.factory = machine.factory
+      }
+
+      await updateMachine(id, updateData)
       toast({
         title: "Success",
         description: "Machine updated successfully!",
         variant: "default",
       })
-      // Navigate back to machines list after short delay
       setTimeout(() => navigate("/machines"), 1500)
     } catch (error) {
       console.error("Failed to update machine:", error)
@@ -122,13 +162,19 @@ const EditMachine = () => {
     return (
       machine.name !== originalMachine.name ||
       machine.description !== originalMachine.description ||
-      machine.status !== originalMachine.status
+      machine.status !== originalMachine.status ||
+      machine.factory !== (originalMachine.factory?._id || "")
     )
   }
 
   const resetForm = () => {
     if (originalMachine) {
-      setMachine({ ...originalMachine })
+      setMachine({
+        name: originalMachine.name || "",
+        description: originalMachine.description || "",
+        status: originalMachine.status || "active",
+        factory: originalMachine.factory?._id || "",
+      })
       setErrors({})
     }
   }
@@ -161,9 +207,12 @@ const EditMachine = () => {
     }
   }
 
+  const getSelectedFactory = () => {
+    return Array.isArray(factories) ? factories.find((f) => f._id === machine.factory) : null
+  }
+
   return (
     <MainLayout>
-      <Toaster />
       <div className="container py-8 mx-auto">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center mb-6">
@@ -189,6 +238,10 @@ const EditMachine = () => {
                   <div className="space-y-2">
                     <Skeleton className="w-32 h-5" />
                     <Skeleton className="w-full h-24" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="w-32 h-5" />
+                    <Skeleton className="w-full h-10" />
                   </div>
                   <div className="space-y-2">
                     <Skeleton className="w-32 h-5" />
@@ -239,12 +292,38 @@ const EditMachine = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="status">Status</Label>
+                      <Label htmlFor="factory">Factory</Label>
                       <Select
-                        name="status"
-                        value={machine.status}
-                        onValueChange={(value) => handleChange({ target: { name: "status", value } })}
+                        value={machine.factory}
+                        onValueChange={(value) => handleSelectChange("factory", value)}
+                        disabled={loadingFactories}
                       >
+                        <SelectTrigger id="factory" className="w-full">
+                          <SelectValue
+                            placeholder={loadingFactories ? "Loading factories..." : "Select a factory (optional)"}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No Factory</SelectItem>
+                          {Array.isArray(factories) &&
+                            factories.map((factory) => (
+                              <SelectItem key={factory._id} value={factory._id}>
+                                <div className="flex items-center gap-2">
+                                  <Building2 className="w-4 h-4" />
+                                  {factory.name}
+                                </div>
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Assign this machine to a factory for better organization.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="status">Status</Label>
+                      <Select value={machine.status} onValueChange={(value) => handleSelectChange("status", value)}>
                         <SelectTrigger id="status" className="w-full">
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
@@ -261,14 +340,28 @@ const EditMachine = () => {
 
                   <div className="p-4 border rounded-md bg-muted/30">
                     <h3 className="mb-2 font-medium">Machine Preview</h3>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{machine.name || "Machine Name"}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {machine.description || "No description provided"}
-                        </p>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{machine.name || "Machine Name"}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {machine.description || "No description provided"}
+                          </p>
+                        </div>
+                        {getStatusBadge(machine.status)}
                       </div>
-                      {getStatusBadge(machine.status)}
+                      {machine.factory && machine.factory !== "none" && getSelectedFactory() && (
+                        <div className="flex items-center gap-2 p-2 border rounded-md bg-blue-50 dark:bg-blue-900/20">
+                          <Building2 className="w-4 h-4 text-blue-500" />
+                          <span className="text-sm font-medium">Factory: {getSelectedFactory().name}</span>
+                        </div>
+                      )}
+                      {originalMachine?.factory && machine.factory === "none" && (
+                        <div className="flex items-center gap-2 p-2 border rounded-md bg-amber-50 dark:bg-amber-900/20">
+                          <AlertCircle className="w-4 h-4 text-amber-500" />
+                          <span className="text-sm">This machine will be removed from its current factory</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 

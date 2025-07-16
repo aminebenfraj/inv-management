@@ -1,250 +1,533 @@
-const MachineMaterial = require("../../models/gestionStockModels/MachineMaterialModel")
-const Material = require("../../models/gestionStockModels/MaterialModel")
-const mongoose = require("mongoose")
+const MachineMaterial = require("../../models/gestionStockModels/MachineMaterialModel");
+const Material = require("../../models/gestionStockModels/MaterialModel");
+const Machine = require("../../models/gestionStockModels/MachineModel");
+const Factory = require("../../models/FactoryModel");
+const mongoose = require("mongoose");
+const Joi = require("joi");
+
+// Validation schemas
+const allocationSchema = Joi.object({
+  materialId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+  userId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
+  factory: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
+  allocations: Joi.array().items(
+    Joi.object({
+      machineId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+      allocatedStock: Joi.number().integer().min(1).required(),
+    })
+  ).min(1).required(),
+});
+
+const updateAllocationSchema = Joi.object({
+  allocatedStock: Joi.number().integer().min(1).required(),
+  userId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
+  comment: Joi.string().max(500).allow("").optional(),
+  factory: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
+});
+
+const querySchema = Joi.object({
+  factory: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+});
 
 // Helper function to validate ObjectId
-const isValidObjectId = (id) => {
-  return mongoose.Types.ObjectId.isValid(id)
-}
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
+// Allocate stock to machines
 exports.allocateStock = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const { materialId, allocations, userId } = req.body
+    // Validate request body
+    const { error, value } = allocationSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: "Validation error", error: error.details[0].message });
+    }
+
+    const { materialId, allocations, userId, factory } = value;
 
     // Validate material existence
-    const material = await Material.findById(materialId)
+    const material = await Material.findById(materialId).session(session);
     if (!material) {
-      return res.status(404).json({ error: "Material not found" })
+      return res.status(404).json({ message: "Material not found" });
+    }
+
+    // Validate factory if provided
+    if (factory) {
+      const existingFactory = await Factory.findById(factory).session(session);
+      if (!existingFactory) {
+        return res.status(404).json({ message: "Factory not found" });
+      }
     }
 
     // Check if enough stock is available
-    const totalRequestedStock = allocations.reduce((sum, alloc) => sum + Number.parseInt(alloc.allocatedStock), 0)
-
+    const totalRequestedStock = allocations.reduce((sum, alloc) => sum + alloc.allocatedStock, 0);
     if (totalRequestedStock > material.currentStock) {
-      return res.status(400).json({ error: "Total allocated stock exceeds available stock." })
+      return res.status(400).json({ message: `Total allocated stock (${totalRequestedStock}) exceeds available stock (${material.currentStock}).` });
     }
-
-    let totalUsedStock = 0 // Track how much stock has been allocated
 
     // Validate userId if provided
-    let validUserId = null
-    if (userId && isValidObjectId(userId)) {
-      validUserId = mongoose.Types.ObjectId(userId)
+    const validUserId = userId && isValidObjectId(userId) ? mongoose.Types.ObjectId(userId) : null;
+
+    // Validate machines and ensure they belong to the specified factory (if provided)
+    for (const { machineId } of allocations) {
+      const machine = await Machine.findById(machineId).session(session);
+      if (!machine) {
+        return res.status(404).json({ message: `Machine ${machineId} not found` });
+      }
+      if (factory && machine.factory?.toString() !== factory) {
+        return res.status(400).json({ message: `Machine ${machineId} does not belong to factory ${factory}` });
+      }
     }
 
+    let totalUsedStock = 0;
+
     for (const { machineId, allocatedStock } of allocations) {
-      if (allocatedStock <= 0) {
-        return res.status(400).json({ error: "Allocated stock must be greater than 0." })
-      }
-
-      // Check if there's enough stock remaining to allocate
-      if (totalUsedStock + Number.parseInt(allocatedStock) > material.currentStock) {
+      if (totalUsedStock + allocatedStock > material.currentStock) {
         return res.status(400).json({
-          error: `Not enough stock available. Only ${material.currentStock - totalUsedStock} left.`,
-        })
+          message: `Not enough stock available. Only ${material.currentStock - totalUsedStock} left.`,
+        });
       }
 
-      let machineMaterial = await MachineMaterial.findOne({ material: materialId, machine: machineId })
+      let machineMaterial = await MachineMaterial.findOne({ material: materialId, machine: machineId }).session(session);
 
       if (machineMaterial) {
-        // Create history entry without changedBy first
+        // Update existing allocation
         const historyEntry = {
           previousStock: machineMaterial.allocatedStock,
-          newStock: Number.parseInt(allocatedStock),
+          newStock: allocatedStock,
           date: new Date(),
-          comment: `Stock updated manually.`,
-        }
-
-        // Only add changedBy if we have a valid userId
-        if (validUserId) {
-          historyEntry.changedBy = validUserId
-        }
-
-        // Add to history
-        machineMaterial.history.push(historyEntry)
-        machineMaterial.allocatedStock = Number.parseInt(allocatedStock)
-        await machineMaterial.save()
+          comment: `Stock updated to ${allocatedStock}.`,
+          ...(validUserId && { changedBy: validUserId }),
+        };
+        machineMaterial.history.push(historyEntry);
+        machineMaterial.allocatedStock = allocatedStock;
+        await machineMaterial.save({ session });
       } else {
-        // Create history entry without changedBy first
+        // Create new allocation
         const historyEntry = {
           previousStock: 0,
-          newStock: Number.parseInt(allocatedStock),
+          newStock: allocatedStock,
           date: new Date(),
-          comment: `Initial allocation.`,
-        }
-
-        // Only add changedBy if we have a valid userId
-        if (validUserId) {
-          historyEntry.changedBy = validUserId
-        }
-
-        // Create new allocation with history
+          comment: `Initial allocation of ${allocatedStock}.`,
+          ...(validUserId && { changedBy: validUserId }),
+        };
         machineMaterial = new MachineMaterial({
           material: materialId,
           machine: machineId,
-          allocatedStock: Number.parseInt(allocatedStock),
+          allocatedStock,
           history: [historyEntry],
-        })
-        await machineMaterial.save()
+        });
+        await machineMaterial.save({ session });
       }
 
-      totalUsedStock += Number.parseInt(allocatedStock) // Update used stock
+      totalUsedStock += allocatedStock;
     }
 
-    // Update the material's current stock by subtracting the total allocated stock
-    material.currentStock -= totalUsedStock
-
-    // Add a record to material history
-    const materialHistoryEntry = {
+    // Update material stock
+    material.currentStock -= totalUsedStock;
+    material.materialHistory.push({
       changeDate: new Date(),
       description: `Allocated ${totalUsedStock} units to machines.`,
-    }
+      ...(validUserId && { changedBy: validUserId }),
+    });
+    await material.save({ session });
 
-    // Only add changedBy if we have a valid userId
-    if (validUserId) {
-      materialHistoryEntry.changedBy = validUserId
-    }
-
-    material.materialHistory.push(materialHistoryEntry)
-    await material.save()
-
+    await session.commitTransaction();
     return res.status(200).json({
-      message: "Stock successfully allocated with validation.",
+      message: "Stock successfully allocated.",
       updatedStock: material.currentStock,
-    })
+    });
   } catch (error) {
-    console.error("Allocation error:", error)
-    return res.status(500).json({ error: error.message })
+    await session.abortTransaction();
+    console.error("Allocation error:", { error, requestBody: req.body });
+    return res.status(500).json({ message: "Server error while allocating stock.", error: error.message });
+  } finally {
+    session.endSession();
   }
-}
+};
 
-// Get all stock allocations
+// Get all stock allocations with factory filter
 exports.getAllAllocations = async (req, res) => {
   try {
-    const allocations = await MachineMaterial.find().populate("machine material")
-    return res.status(200).json(allocations)
-  } catch (error) {
-    return res.status(500).json({ error: error.message })
-  }
-}
+    // Validate query parameters
+    const { error, value } = querySchema.validate(req.query);
+    if (error) {
+      return res.status(400).json({ message: "Validation error", error: error.details[0].message });
+    }
 
-// Get stock allocation for a specific material
+    const { factory, page, limit } = value;
+
+    // Build query
+    const match = {};
+    if (factory) {
+      match["machine.factory"] = mongoose.Types.ObjectId(factory);
+    }
+
+    // Aggregate to join with Machine for factory filtering
+    const allocations = await MachineMaterial.aggregate([
+      {
+        $lookup: {
+          from: "machines",
+          localField: "machine",
+          foreignField: "_id",
+          as: "machine",
+        },
+      },
+      { $unwind: "$machine" },
+      ...(factory ? [{ $match: match }] : []),
+      {
+        $lookup: {
+          from: "materials",
+          localField: "material",
+          foreignField: "_id",
+          as: "material",
+        },
+      },
+      { $unwind: "$material" },
+      {
+        $lookup: {
+          from: "factories",
+          localField: "machine.factory",
+          foreignField: "_id",
+          as: "machine.factory",
+        },
+      },
+      { $unwind: { path: "$machine.factory", preserveNullAndEmptyArrays: true } },
+      { $sort: { updatedAt: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+    ]);
+
+    // Count total documents for pagination
+    const total = await MachineMaterial.aggregate([
+      {
+        $lookup: {
+          from: "machines",
+          localField: "machine",
+          foreignField: "_id",
+          as: "machine",
+        },
+      },
+      { $unwind: "$machine" },
+      ...(factory ? [{ $match: match }] : []),
+      { $count: "total" },
+    ]).then(result => result[0]?.total || 0);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return res.status(200).json({
+      total,
+      page,
+      limit,
+      totalPages,
+      data: allocations,
+    });
+  } catch (error) {
+    console.error("Error fetching allocations:", { error, query: req.query });
+    return res.status(500).json({ message: "Server error while fetching allocations.", error: error.message });
+  }
+};
+
+// Get stock allocations for a specific material with factory filter
 exports.getMaterialAllocations = async (req, res) => {
   try {
-    const { materialId } = req.params
-    const allocations = await MachineMaterial.find({ material: materialId }).populate("machine")
-    return res.status(200).json(allocations)
-  } catch (error) {
-    return res.status(500).json({ error: error.message })
-  }
-}
+    const { materialId } = req.params;
+    const { factory } = req.query;
 
-// Get stock allocation history for a machine
+    // Validate materialId and factory
+    if (!isValidObjectId(materialId)) {
+      return res.status(400).json({ message: "Invalid material ID format." });
+    }
+    if (factory && !isValidObjectId(factory)) {
+      return res.status(400).json({ message: "Invalid factory ID format." });
+    }
+
+    // Build query
+    const match = { material: mongoose.Types.ObjectId(materialId) };
+    if (factory) {
+      match["machine.factory"] = mongoose.Types.ObjectId(factory);
+    }
+
+    const allocations = await MachineMaterial.aggregate([
+      {
+        $lookup: {
+          from: "machines",
+          localField: "machine",
+          foreignField: "_id",
+          as: "machine",
+        },
+      },
+      { $unwind: "$machine" },
+      { $match: match },
+      {
+        $lookup: {
+          from: "factories",
+          localField: "machine.factory",
+          foreignField: "_id",
+          as: "machine.factory",
+        },
+      },
+      { $unwind: { path: "$machine.factory", preserveNullAndEmptyArrays: true } },
+    ]);
+
+    return res.status(200).json(allocations);
+  } catch (error) {
+    console.error("Error fetching material allocations:", { error, materialId: req.params.materialId, query: req.query });
+    return res.status(500).json({ message: "Server error while fetching material allocations.", error: error.message });
+  }
+};
+
+// Get stock allocation history for a machine with factory filter
 exports.getMachineStockHistory = async (req, res) => {
   try {
-    const { machineId } = req.params
-    const history = await MachineMaterial.find({ machine: machineId }).populate("material").select("history material")
-    return res.status(200).json(history)
+    const { machineId } = req.params;
+    const { factory } = req.query;
+
+    // Validate machineId and factory
+    if (!isValidObjectId(machineId)) {
+      return res.status(400).json({ message: "Invalid machine ID format." });
+    }
+    if (factory && !isValidObjectId(factory)) {
+      return res.status(400).json({ message: "Invalid factory ID format." });
+    }
+
+    // Validate machine and factory
+    const machine = await Machine.findById(machineId);
+    if (!machine) {
+      return res.status(404).json({ message: "Machine not found." });
+    }
+    if (factory && machine.factory?.toString() !== factory) {
+      return res.status(400).json({ message: "Machine does not belong to the specified factory." });
+    }
+
+    const history = await MachineMaterial.find({ machine: machineId })
+      .populate("material")
+      .select("history material")
+      .lean();
+
+    return res.status(200).json(history);
   } catch (error) {
-    return res.status(500).json({ error: error.message })
+    console.error("Error fetching machine stock history:", { error, machineId: req.params.machineId, query: req.query });
+    return res.status(500).json({ message: "Server error while fetching machine stock history.", error: error.message });
   }
-}
+};
 
 // Update a specific allocation
 exports.updateAllocation = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const { id } = req.params
-    const { allocatedStock, userId, comment } = req.body
-
-    // Find the allocation
-    const allocation = await MachineMaterial.findById(id)
-    if (!allocation) {
-      return res.status(404).json({ error: "Allocation not found" })
+    // Validate request body
+    const { error, value } = updateAllocationSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: "Validation error", error: error.details[0].message });
     }
 
-    // Get material to check stock availability
-    const material = await Material.findById(allocation.material)
+    const { id } = req.params;
+    const { allocatedStock, userId, comment, factory } = value;
+
+    // Validate allocation ID
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid allocation ID format." });
+    }
+
+    // Find the allocation
+    const allocation = await MachineMaterial.findById(id).session(session);
+    if (!allocation) {
+      return res.status(404).json({ message: "Allocation not found." });
+    }
+
+    // Validate material
+    const material = await Material.findById(allocation.material).session(session);
     if (!material) {
-      return res.status(404).json({ error: "Material not found" })
+      return res.status(404).json({ message: "Material not found." });
+    }
+
+    // Validate factory if provided
+    if (factory) {
+      const machine = await Machine.findById(allocation.machine).session(session);
+      if (!machine) {
+        return res.status(404).json({ message: "Machine not found." });
+      }
+      if (machine.factory?.toString() !== factory) {
+        return res.status(400).json({ message: "Machine does not belong to the specified factory." });
+      }
     }
 
     // Calculate stock difference
-    const stockDifference = Number.parseInt(allocatedStock) - allocation.allocatedStock
+    const stockDifference = allocatedStock - allocation.allocatedStock;
 
-    // Check if enough stock is available if increasing allocation
+    // Check stock availability
     if (stockDifference > 0 && stockDifference > material.currentStock) {
       return res.status(400).json({
-        error: `Not enough stock available. Only ${material.currentStock} units available.`,
-      })
+        message: `Not enough stock available. Only ${material.currentStock} units available.`,
+      });
     }
 
-    // Create history entry without changedBy first
+    // Update allocation history
     const historyEntry = {
       previousStock: allocation.allocatedStock,
-      newStock: Number.parseInt(allocatedStock),
+      newStock: allocatedStock,
       date: new Date(),
       comment: comment || `Stock updated from ${allocation.allocatedStock} to ${allocatedStock}.`,
-    }
+      ...(userId && isValidObjectId(userId) ? { changedBy: mongoose.Types.ObjectId(userId) } : {}),
+    };
+    allocation.history.push(historyEntry);
+    allocation.allocatedStock = allocatedStock;
+    await allocation.save({ session });
 
-    // Validate userId if provided
-    if (userId && isValidObjectId(userId)) {
-      historyEntry.changedBy = mongoose.Types.ObjectId(userId)
-    }
-
-    // Add to history
-    allocation.history.push(historyEntry)
-
-    // Update allocation
-    allocation.allocatedStock = Number.parseInt(allocatedStock)
-    await allocation.save()
-
-    // Update material stock based on the difference
+    // Update material stock
     if (stockDifference !== 0) {
-      // If stockDifference is positive, we're adding more to the machine, so subtract from material stock
-      // If stockDifference is negative, we're removing from the machine, so add back to material stock
-      material.currentStock -= stockDifference
-
-      // Add a record to material history
-      const materialHistoryEntry = {
+      material.currentStock -= stockDifference;
+      material.materialHistory.push({
         changeDate: new Date(),
         description:
           stockDifference > 0
             ? `Allocated ${stockDifference} additional units to machine ${allocation.machine}.`
             : `Returned ${Math.abs(stockDifference)} units from machine ${allocation.machine}.`,
-      }
-
-      // Only add changedBy if we have a valid userId
-      if (userId && isValidObjectId(userId)) {
-        materialHistoryEntry.changedBy = mongoose.Types.ObjectId(userId)
-      }
-
-      material.materialHistory.push(materialHistoryEntry)
-      await material.save()
+        ...(userId && isValidObjectId(userId) ? { changedBy: mongoose.Types.ObjectId(userId) } : {}),
+      });
+      await material.save({ session });
     }
 
+    await session.commitTransaction();
     return res.status(200).json({
-      message: "Allocation updated successfully",
+      message: "Allocation updated successfully.",
       allocation,
       updatedMaterialStock: material.currentStock,
-    })
+    });
   } catch (error) {
-    console.error("Update allocation error:", error)
-    return res.status(500).json({ error: error.message })
+    await session.abortTransaction();
+    console.error("Update allocation error:", { error, allocationId: req.params.id, requestBody: req.body });
+    return res.status(500).json({ message: "Server error while updating allocation.", error: error.message });
+  } finally {
+    session.endSession();
   }
-}
+};
 
+// Delete a specific allocation
 exports.deleteAllocation = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const deletedAllocation = await MachineMaterial.findByIdAndDelete(req.params.id)
+    const { id } = req.params;
 
-    if (!deletedAllocation) {
-      return res.status(404).json({ message: "Allocation not found." })
+    // Validate allocation ID
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid allocation ID format." });
     }
 
-    res.status(200).json({ message: "Allocation deleted successfully." })
+    const allocation = await MachineMaterial.findById(id).session(session);
+    if (!allocation) {
+      return res.status(404).json({ message: "Allocation not found." });
+    }
+
+    // Restore stock to material
+    const material = await Material.findById(allocation.material).session(session);
+    if (!material) {
+      return res.status(404).json({ message: "Material not found." });
+    }
+
+    material.currentStock += allocation.allocatedStock;
+    material.materialHistory.push({
+      changeDate: new Date(),
+      description: `Returned ${allocation.allocatedStock} units from machine ${allocation.machine} due to allocation deletion.`,
+    });
+    await material.save({ session });
+
+    await MachineMaterial.findByIdAndDelete(id, { session });
+    await session.commitTransaction();
+    return res.status(200).json({ message: "Allocation deleted successfully." });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting allocation.", error })
+    await session.abortTransaction();
+    console.error("Delete allocation error:", { error, allocationId: req.params.id });
+    return res.status(500).json({ message: "Server error while deleting allocation.", error: error.message });
+  } finally {
+    session.endSession();
   }
-}
+};
 
+// Get all stock allocations for a specific factory
+exports.getAllocationsByFactory = async (req, res) => {
+  try {
+    const { factoryId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
 
+    // Validate factoryId and query parameters
+    const { error, value } = querySchema.validate({ factory: factoryId, page, limit });
+    if (error) {
+      return res.status(400).json({ message: "Validation error", error: error.details[0].message });
+    }
+
+    // Validate factory existence
+    const factory = await Factory.findById(factoryId);
+    if (!factory) {
+      return res.status(404).json({ message: "Factory not found." });
+    }
+
+    // Aggregate to filter allocations by factory
+    const allocations = await MachineMaterial.aggregate([
+      {
+        $lookup: {
+          from: "machines",
+          localField: "machine",
+          foreignField: "_id",
+          as: "machine",
+        },
+      },
+      { $unwind: "$machine" },
+      { $match: { "machine.factory": mongoose.Types.ObjectId(factoryId) } },
+      {
+        $lookup: {
+          from: "materials",
+          localField: "material",
+          foreignField: "_id",
+          as: "material",
+        },
+      },
+      { $unwind: "$material" },
+      {
+        $lookup: {
+          from: "factories",
+          localField: "machine.factory",
+          foreignField: "_id",
+          as: "machine.factory",
+        },
+      },
+      { $unwind: { path: "$machine.factory", preserveNullAndEmptyArrays: true } },
+      { $sort: { updatedAt: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+    ]);
+
+    // Count total documents
+    const total = await MachineMaterial.aggregate([
+      {
+        $lookup: {
+          from: "machines",
+          localField: "machine",
+          foreignField: "_id",
+          as: "machine",
+        },
+      },
+      { $unwind: "$machine" },
+      { $match: { "machine.factory": mongoose.Types.ObjectId(factoryId) } },
+      { $count: "total" },
+    ]).then(result => result[0]?.total || 0);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return res.status(200).json({
+      total,
+      page,
+      limit,
+      totalPages,
+      data: allocations,
+    });
+  } catch (error) {
+    console.error("Error fetching allocations by factory:", { error, factoryId: req.params.factoryId, query: req.query });
+    return res.status(500).json({ message: "Server error while fetching allocations by factory.", error: error.message });
+  }
+};

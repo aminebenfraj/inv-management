@@ -71,3 +71,55 @@ export const deleteMaterial = (id) => {
 export const removeReferenceFromHistory = (materialId, historyId) => {
   return apiRequest("DELETE", `${BASE_URL}/${materialId}/reference-history/${historyId}`)
 }
+
+// Get materials by factory ID
+export const getMaterialsByFactoryId = async (factoryId, page = 1, limit = 10, search = "", filters = {}, sort = {}) => {
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  })
+
+  if (search) {
+    queryParams.append("search", search)
+  }
+
+  if (sort.field) {
+    queryParams.append("sortBy", sort.field)
+    queryParams.append("sortOrder", sort.order || -1)
+  }
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      queryParams.append(key, value.toString())
+    }
+  })
+
+  const url = `${BASE_URL}/factory/${factoryId}?${queryParams.toString()}`
+
+  try {
+    return await apiRequest("GET", url)
+  } catch (error) {
+    console.error(`Error fetching materials for factory ${factoryId}:`, error)
+    throw error
+  }
+}
+
+// Get materials by machine ID
+export const getMaterialsByMachineId = async (machineId, filters = {}) => {
+  const queryParams = new URLSearchParams()
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      queryParams.append(key, value.toString())
+    }
+  })
+
+  const url = `${BASE_URL}/machine/${machineId}?${queryParams.toString()}`
+
+  try {
+    return await apiRequest("GET", url)
+  } catch (error) {
+    console.error(`Error fetching materials for machine ${machineId}:`, error)
+    throw error
+  }
+}

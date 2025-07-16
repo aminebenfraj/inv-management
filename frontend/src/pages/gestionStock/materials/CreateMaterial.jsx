@@ -16,11 +16,14 @@ import { getAllSuppliers } from "../../../apis/gestionStockApi/supplierApi"
 import { getAllCategories } from "../../../apis/gestionStockApi/categoryApi"
 import { getAllLocations } from "../../../apis/gestionStockApi/locationApi"
 import { getAllMachines } from "../../../apis/gestionStockApi/machineApi"
-import { ArrowLeft, Package, Tag, MapPin, Truck, Sparkles } from "lucide-react"
+import { getAllFactories } from "../../../apis/gestionStockApi/factoryApi"
+import { ArrowLeft, Package, Tag, MapPin, Truck, Sparkles, Building2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 import MainLayout from "@/components/MainLayout"
 
 const CreateMaterial = () => {
   const navigate = useNavigate()
+  const { toast } = useToast()
   const [material, setMaterial] = useState({
     supplier: "",
     manufacturer: "",
@@ -37,11 +40,13 @@ const CreateMaterial = () => {
     photo: "",
     price: 0,
     category: "",
+    factory: "",
   })
   const [suppliers, setSuppliers] = useState([])
   const [categories, setCategories] = useState([])
   const [locations, setLocations] = useState([])
   const [machines, setMachines] = useState([])
+  const [factories, setFactories] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("basic")
   const [error, setError] = useState("")
@@ -49,7 +54,7 @@ const CreateMaterial = () => {
   const fetchData = async () => {
     try {
       setLoading(true)
-      await Promise.all([fetchSuppliers(), fetchCategories(), fetchLocations(), fetchMachines()])
+      await Promise.all([fetchSuppliers(), fetchCategories(), fetchLocations(), fetchMachines(), fetchFactories()])
     } catch (error) {
       console.error("Error loading data:", error)
       setError("Failed to load form data. Please try again or contact support.")
@@ -64,37 +69,51 @@ const CreateMaterial = () => {
 
   const fetchSuppliers = async () => {
     try {
-      const data = await getAllSuppliers()
-      setSuppliers(data)
+      const data = await getAllSuppliers(1, 100)
+      setSuppliers(Array.isArray(data) ? data : data?.data || [])
     } catch (error) {
       console.error("Failed to fetch suppliers:", error)
+      setSuppliers([])
     }
   }
 
   const fetchCategories = async () => {
     try {
-      const data = await getAllCategories()
-      setCategories(data)
+      const data = await getAllCategories(1, 100)
+      setCategories(Array.isArray(data) ? data : data?.data || [])
     } catch (error) {
       console.error("Failed to fetch categories:", error)
+      setCategories([])
     }
   }
 
   const fetchLocations = async () => {
     try {
-      const data = await getAllLocations()
-      setLocations(data)
+      const data = await getAllLocations(1, 100)
+      setLocations(Array.isArray(data) ? data : data?.data || [])
     } catch (error) {
       console.error("Failed to fetch locations:", error)
+      setLocations([])
     }
   }
 
   const fetchMachines = async () => {
     try {
-      const data = await getAllMachines()
-      setMachines(data)
+      const data = await getAllMachines(1, 100)
+      setMachines(Array.isArray(data) ? data : data?.data || [])
     } catch (error) {
       console.error("Failed to fetch machines:", error)
+      setMachines([])
+    }
+  }
+
+  const fetchFactories = async () => {
+    try {
+      const data = await getAllFactories(1, 100)
+      setFactories(Array.isArray(data) ? data : data?.data || [])
+    } catch (error) {
+      console.error("Failed to fetch factories:", error)
+      setFactories([])
     }
   }
 
@@ -126,27 +145,44 @@ const CreateMaterial = () => {
     ]
 
     for (const { field, label } of requiredObjectIds) {
-      if (!material[field] || material[field] === "") {
-        alert(`${label} is required. Please select a valid ${label.toLowerCase()}.`)
-        // Set active tab to the location tab where these fields are
+      if (
+        !material[field] ||
+        material[field] === "" ||
+        material[field] === `default${field.charAt(0).toUpperCase() + field.slice(1)}`
+      ) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: `${label} is required. Please select a valid ${label.toLowerCase()}.`,
+        })
         setActiveTab("location")
         return
       }
     }
 
     try {
-      await createMaterial(material)
-      alert("Material created successfully!")
+      const materialData = { ...material }
+
+      // Only include factory if one is selected and it's not the default value
+      if (material.factory && material.factory !== "defaultFactory") {
+        materialData.factory = material.factory
+      } else {
+        delete materialData.factory
+      }
+
+      await createMaterial(materialData)
+      toast({
+        title: "Success",
+        description: "Material created successfully!",
+      })
       navigate("/materials")
     } catch (error) {
       console.error("Failed to create material:", error)
-
-      // Provide more specific error messages based on the error response
-      if (error.response && error.response.data && error.response.data.message) {
-        alert(`Failed to create material: ${error.response.data.message}`)
-      } else {
-        alert("Failed to create material. Please try again.")
-      }
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.response?.data?.message || "Failed to create material. Please try again.",
+      })
     }
   }
 
@@ -186,7 +222,7 @@ const CreateMaterial = () => {
                 <Button onClick={() => navigate("/materials")}>Return to Materials List</Button>
                 <Button
                   variant="outline"
-                  className="ml-2"
+                  className="ml-2 bg-transparent"
                   onClick={() => {
                     setError("")
                     setLoading(true)
@@ -458,11 +494,15 @@ const CreateMaterial = () => {
                         </Label>
                         <Select
                           name="supplier"
-                          value={material.supplier || ""}
+                          value={material.supplier || "defaultSupplier"}
                           onValueChange={(value) => handleChange({ target: { name: "supplier", value } })}
                           required
                         >
-                          <SelectTrigger className={!material.supplier ? "border-red-500" : ""}>
+                          <SelectTrigger
+                            className={
+                              !material.supplier || material.supplier === "defaultSupplier" ? "border-red-500" : ""
+                            }
+                          >
                             <SelectValue placeholder="Select supplier" />
                           </SelectTrigger>
                           <SelectContent>
@@ -473,25 +513,65 @@ const CreateMaterial = () => {
                                 </SelectItem>
                               ))
                             ) : (
-                              <SelectItem value="" disabled>
+                              <SelectItem value="defaultSupplier" disabled>
                                 No suppliers available
                               </SelectItem>
                             )}
                           </SelectContent>
                         </Select>
-                        {!material.supplier && <p className="text-xs text-red-500">Supplier is required</p>}
+                        {(!material.supplier || material.supplier === "defaultSupplier") && (
+                          <p className="text-xs text-red-500">Supplier is required</p>
+                        )}
                       </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="factory">Factory</Label>
+                        <Select
+                          name="factory"
+                          value={material.factory || "defaultFactory"}
+                          onValueChange={(value) => handleChange({ target: { name: "factory", value } })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select factory (optional)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="defaultFactory">No Factory</SelectItem>
+                            {factories.length > 0 ? (
+                              factories.map((factory) => (
+                                <SelectItem key={factory._id} value={factory._id}>
+                                  <div className="flex items-center gap-2">
+                                    <Building2 className="w-4 h-4" />
+                                    {factory.name}
+                                  </div>
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="defaultFactory" disabled>
+                                No factories available
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          Assign this material to a specific factory (optional)
+                        </p>
+                      </div>
+
                       <div className="space-y-2">
                         <Label htmlFor="location">
                           Location <span className="text-red-500">*</span>
                         </Label>
                         <Select
                           name="location"
-                          value={material.location || ""}
+                          value={material.location || "defaultLocation"}
                           onValueChange={(value) => handleChange({ target: { name: "location", value } })}
                           required
                         >
-                          <SelectTrigger className={!material.location ? "border-red-500" : ""}>
+                          <SelectTrigger
+                            className={
+                              !material.location || material.location === "defaultLocation" ? "border-red-500" : ""
+                            }
+                          >
                             <SelectValue placeholder="Select location" />
                           </SelectTrigger>
                           <SelectContent>
@@ -502,13 +582,15 @@ const CreateMaterial = () => {
                                 </SelectItem>
                               ))
                             ) : (
-                              <SelectItem value="" disabled>
+                              <SelectItem value="defaultLocation" disabled>
                                 No locations available
                               </SelectItem>
                             )}
                           </SelectContent>
                         </Select>
-                        {!material.location && <p className="text-xs text-red-500">Location is required</p>}
+                        {(!material.location || material.location === "defaultLocation") && (
+                          <p className="text-xs text-red-500">Location is required</p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="category">
@@ -516,11 +598,15 @@ const CreateMaterial = () => {
                         </Label>
                         <Select
                           name="category"
-                          value={material.category || ""}
+                          value={material.category || "defaultCategory"}
                           onValueChange={(value) => handleChange({ target: { name: "category", value } })}
                           required
                         >
-                          <SelectTrigger className={!material.category ? "border-red-500" : ""}>
+                          <SelectTrigger
+                            className={
+                              !material.category || material.category === "defaultCategory" ? "border-red-500" : ""
+                            }
+                          >
                             <SelectValue placeholder="Select category" />
                           </SelectTrigger>
                           <SelectContent>
@@ -531,13 +617,15 @@ const CreateMaterial = () => {
                                 </SelectItem>
                               ))
                             ) : (
-                              <SelectItem value="" disabled>
+                              <SelectItem value="defaultCategory" disabled>
                                 No categories available
                               </SelectItem>
                             )}
                           </SelectContent>
                         </Select>
-                        {!material.category && <p className="text-xs text-red-500">Category is required</p>}
+                        {(!material.category || material.category === "defaultCategory") && (
+                          <p className="text-xs text-red-500">Category is required</p>
+                        )}
                       </div>
                     </motion.div>
                   )}
@@ -592,4 +680,3 @@ const CreateMaterial = () => {
 }
 
 export default CreateMaterial
-

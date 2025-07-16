@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { getAllAllocations, deleteAllocation } from "@/apis/gestionStockApi/materialMachineApi"
+import { getAllFactories } from "@/apis/gestionStockApi/factoryApi"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -20,8 +21,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, Loader2, FileText, AlertCircle } from "lucide-react"
+import {
+  Plus,
+  Search,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Eye,
+  Loader2,
+  FileText,
+  AlertCircle,
+  Building2,
+  Filter,
+  X,
+} from "lucide-react"
 import MainLayout from "@/components/MainLayout"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -47,24 +62,28 @@ const MaterialMachineList = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [allocationToDelete, setAllocationToDelete] = useState(null)
   const [error, setError] = useState(null)
+  const [factoryFilter, setFactoryFilter] = useState("all")
+  const [factories, setFactories] = useState([])
+  const [searchParams] = useSearchParams()
 
   useEffect(() => {
     fetchAllocations()
+    fetchFactories()
   }, [])
 
   useEffect(() => {
     if (allocations.length > 0) {
       filterAllocations()
     }
-  }, [searchTerm, allocations])
+  }, [searchTerm, allocations, factoryFilter])
 
   const fetchAllocations = async () => {
     try {
       setLoading(true)
       setError(null)
       const data = await getAllAllocations()
-      setAllocations(data)
-      setFilteredAllocations(data)
+      setAllocations(Array.isArray(data) ? data : [])
+      setFilteredAllocations(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error("Error fetching allocations:", error)
       setError("Failed to fetch allocations. Please try again.")
@@ -78,18 +97,42 @@ const MaterialMachineList = () => {
     }
   }
 
-  const filterAllocations = () => {
-    const filtered = allocations.filter((allocation) => {
-      const materialName = allocation.material?.reference || ""
-      const materialDesc = allocation.material?.description || ""
-      const machineName = allocation.machine?.name || ""
+  const fetchFactories = async () => {
+    try {
+      const data = await getAllFactories()
+      setFactories(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error("Error fetching factories:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch factories",
+        variant: "destructive",
+      })
+    }
+  }
 
-      return (
-        materialName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        materialDesc.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        machineName.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    })
+  const filterAllocations = () => {
+    let filtered = allocations
+
+    if (searchTerm) {
+      filtered = filtered.filter((allocation) => {
+        const materialName = allocation.material?.reference || ""
+        const materialDesc = allocation.material?.description || ""
+        const machineName = allocation.machine?.name || ""
+        const factoryName = allocation.machine?.factory?.name || ""
+
+        return (
+          materialName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          materialDesc.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          machineName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          factoryName.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      })
+    }
+
+    if (factoryFilter !== "all") {
+      filtered = filtered.filter((allocation) => allocation.machine?.factory?._id === factoryFilter)
+    }
 
     setFilteredAllocations(filtered)
   }
@@ -126,13 +169,35 @@ const MaterialMachineList = () => {
     }
   }
 
+  const clearFilters = () => {
+    setFactoryFilter("all")
+    setSearchTerm("")
+    toast({
+      title: "Filters cleared",
+      description: "All filters have been reset",
+    })
+  }
+
+  const getSelectedFactoryName = () => {
+    if (factoryFilter === "all") return "All Factories"
+    const factory = factories.find((f) => f._id === factoryFilter)
+    return factory ? factory.name : "Unknown Factory"
+  }
+
   return (
     <MainLayout>
       <motion.div className="container py-6 mx-auto" initial="hidden" animate="visible" variants={fadeIn}>
         <div className="flex flex-col mb-6 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold">Material-Machine Allocations</h1>
-            <p className="text-muted-foreground">View and manage material stock allocations to machines</p>
+            <p className="text-muted-foreground">
+              View and manage material stock allocations to machines
+              {factoryFilter !== "all" && (
+                <span className="ml-2">
+                  • Filtered by: <span className="font-medium">{getSelectedFactoryName()}</span>
+                </span>
+              )}
+            </p>
           </div>
           <Button onClick={() => navigate("/machinematerial/create")} className="mt-4 md:mt-0">
             <Plus className="w-4 h-4 mr-2" />
@@ -150,18 +215,52 @@ const MaterialMachineList = () => {
 
         <Card className="mb-6">
           <CardHeader className="pb-3">
-            <CardTitle>Filters</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="w-5 h-5" />
+                Filters
+              </CardTitle>
+              {(factoryFilter !== "all" || searchTerm) && (
+                <Button variant="outline" size="sm" onClick={clearFilters}>
+                  <X className="w-4 h-4 mr-2" />
+                  Clear Filters
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4 md:flex-row">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by material or machine..."
+                  placeholder="Search by material, machine, or factory..."
                   className="pl-8"
                   value={searchTerm}
                   onChange={handleSearchChange}
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <Select value={factoryFilter} onValueChange={setFactoryFilter}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Filter by factory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4" />
+                        All Factories
+                      </div>
+                    </SelectItem>
+                    {factories.map((factory) => (
+                      <SelectItem key={factory._id} value={factory._id}>
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4" />
+                          {factory.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>
@@ -179,9 +278,11 @@ const MaterialMachineList = () => {
                 <FileText className="w-12 h-12 mb-4 text-muted-foreground" />
                 <h3 className="text-lg font-medium">No allocations found</h3>
                 <p className="mt-1 mb-4 text-muted-foreground">
-                  {searchTerm ? "Try adjusting your search" : "Create your first allocation to get started"}
+                  {searchTerm || factoryFilter !== "all"
+                    ? "Try adjusting your search or filters"
+                    : "Create your first allocation to get started"}
                 </p>
-                {!searchTerm && (
+                {!searchTerm && factoryFilter === "all" && (
                   <Button onClick={() => navigate("/machinematerial/create")}>
                     <Plus className="w-4 h-4 mr-2" />
                     New Allocation
@@ -195,6 +296,7 @@ const MaterialMachineList = () => {
                     <TableRow>
                       <TableHead>Material</TableHead>
                       <TableHead>Machine</TableHead>
+                      <TableHead>Factory</TableHead>
                       <TableHead className="text-right">Allocated Stock</TableHead>
                       <TableHead className="text-right">Last Updated</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -220,6 +322,12 @@ const MaterialMachineList = () => {
                             <Badge variant={allocation.machine?.status === "active" ? "outline" : "secondary"}>
                               {allocation.machine?.status}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Building2 className="w-4 h-4 text-muted-foreground" />
+                              <span className="font-medium">{allocation.machine?.factory?.name || "No Factory"}</span>
+                            </div>
                           </TableCell>
                           <TableCell className="font-medium text-right">{allocation.allocatedStock}</TableCell>
                           <TableCell className="text-right text-muted-foreground">

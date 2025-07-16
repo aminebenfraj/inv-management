@@ -20,6 +20,7 @@ const solicitanteRoutes = require("./routes/pedidoRoutes/solicitanteRoutes");
 const tipoRoutes = require("./routes/pedidoRoutes/tipoRoutes");
 const tableStatusRoutes = require("./routes/pedidoRoutes/tableStatusRoutes");
 const pedidosRoutes = require("./routes/pedidoRoutes/pedidoRoutes");
+const factoryRoutes = require("./routes/factoryRoutes");
 
 const app = express();
 
@@ -64,7 +65,7 @@ app.use("/api/solicitantes", solicitanteRoutes);
 app.use("/api/tipos", tipoRoutes);
 app.use("/api/tableStatus", tableStatusRoutes);
 app.use("/api/pedido", pedidosRoutes);
-
+app.use("/api/factories", factoryRoutes)
 
 // Start Server and Initialize Socket.IO
 const PORT = process.env.PORT || 5000;

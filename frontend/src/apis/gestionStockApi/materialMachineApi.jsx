@@ -26,7 +26,25 @@ export const getMachineStockHistory = (machineId) => {
 export const allocateStock = (data) => {
   return apiRequest("POST", BASE_URL, data)
 }
+
 // Delete an allocation
 export const deleteAllocation = (id) => {
   return apiRequest("DELETE", `${BASE_URL}/${id}`)
+}
+
+// Get allocations by factory ID
+export const getAllocationsByFactory = async (factoryId, page = 1, limit = 10) => {
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  })
+
+  const url = `${BASE_URL}/factory/${factoryId}?${queryParams.toString()}`
+
+  try {
+    return await apiRequest("GET", url)
+  } catch (error) {
+    console.error(`Error fetching allocations for factory ${factoryId}:`, error)
+    throw error
+  }
 }

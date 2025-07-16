@@ -41,7 +41,10 @@ import Materialmachinecreate from "../src/pages/gestionStock/machineMaterials/ma
 import Materialmachinedetails from "../src/pages/gestionStock/machineMaterials/material-machine-details"
 import Materialmachineedit from "../src/pages/gestionStock/machineMaterials/material-machine-edit"
 import MachineDashboard from "./pages/gestionStock/machine_dashboard/machine-dashboard"
-
+import CreateFactory from "./pages/factories/CreateFactory"
+import EditFactory from "./pages/factories/EditFactory"
+import ShowFactories from "./pages/factories/ShowFactories"
+import FactoryDetails from "./pages/factories/FactoryDetails"
 
 // Pedido (Order) Pages
 import PedidoList from "./pages/pedido/PedidoList"
@@ -58,16 +61,14 @@ import ShowTipo from "./pages/pedido/tipo/show-tipo"
 import EditTipo from "./pages/pedido/tipo/edit-tipo"
 import CreateTipo from "./pages/pedido/tipo/create-tipo"
 
-import { Manager } from "socket.io-client"
-
 function App() {
   // Define role groups for different sections
   const adminRoles = ["Admin"]
   const productionRoles = [
     "Admin",
     "Manager",
-    "PRODUCCION", 
-    "Manufacturing Eng. Manager", 
+    "PRODUCCION",
+    "Manufacturing Eng. Manager",
     "Manufacturing Eng. Leader",
     "Project Manager",
     "Business Manager",
@@ -81,10 +82,11 @@ function App() {
     "Quality Manager",
     "Quality Leader UAP1",
     "Quality Leader UAP2",
-    "Quality Leader UAP3"]
- const logisticRoles = ["Admin","LOGISTICA","PRODUCCION"]
-  const inventoryRoles = ["Admin","Manager"]
-  const qualityRoles = ["Admin","Manager"]
+    "Quality Leader UAP3",
+  ]
+  const logisticRoles = ["Admin", "LOGISTICA", "PRODUCCION"]
+  const inventoryRoles = ["Admin", "Manager"]
+  const qualityRoles = ["Admin", "Manager"]
 
   return (
     <AuthProvider>
@@ -226,6 +228,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* Added Machine Details route for consistency */}
+        <Route
+          path="machines/details/:id"
+          element={
+            <ProtectedRoute>
+              {/* Assuming you have a MachineDetails component, or this will navigate to EditMachine for now */}
+              <EditMachine /> 
+            </ProtectedRoute>
+          }
+        />
 
         {/* Suppliers routes */}
         <Route
@@ -338,7 +350,7 @@ function App() {
           }
         />
         <Route
-          path="/Pedido/edit/:id"
+          path="/pedido/edit/:id"
           element={
             <ProtectedRoute requiredRoles={logisticRoles}>
               <Editpedido />
@@ -390,7 +402,7 @@ function App() {
           }
         />
         <Route
-          path="/tablestatus/edit/:id"
+          path="/table-status/edit/:id"
           element={
             <ProtectedRoute requiredRoles={logisticRoles}>
               <EditTableStatus />
@@ -398,7 +410,7 @@ function App() {
           }
         />
         <Route
-          path="/tablestatus/create"
+          path="/table-status/create"
           element={
             <ProtectedRoute requiredRoles={logisticRoles}>
               <CreateTableStatus />
@@ -428,6 +440,38 @@ function App() {
           element={
             <ProtectedRoute requiredRoles={logisticRoles}>
               <CreateTipo />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/factories"
+          element={
+            <ProtectedRoute>
+              <ShowFactories />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/factories/create"
+          element={
+            <ProtectedRoute requiredRoles={inventoryRoles}> {/* Assuming inventory roles can create factories */}
+              <CreateFactory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/factories/edit/:id"
+          element={
+            <ProtectedRoute >
+              <EditFactory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/factories/detail/:id" 
+          element={
+            <ProtectedRoute >
+              <FactoryDetails />
             </ProtectedRoute>
           }
         />

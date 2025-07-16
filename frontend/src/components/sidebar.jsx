@@ -56,6 +56,13 @@ const navigationItems = [
         path: "/machines",
       },
       {
+        id: "factories",
+        label: "Factories",
+        icon: LayoutDashboard, // Using LayoutDashboard as a placeholder icon, you can change it if you have a more suitable one.
+        path: "/factories",
+        isMainPage: true,
+      },
+      {
         id: "machineMaterial",
         label: "Machine Material",
         icon: Layers,
@@ -82,7 +89,7 @@ const navigationItems = [
       },
     ],
   },
- 
+
   {
     id: "pedido",
     label: "Orders",
@@ -421,7 +428,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
             <div className="flex flex-col gap-2">
               <Button
                 variant="outline"
-                className="justify-start w-full transition-colors border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800/50"
+                className="justify-start w-full transition-colors bg-transparent border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800/50"
                 size="sm"
               >
                 <HelpCircle className="w-4 h-4 mr-2 text-primary" />

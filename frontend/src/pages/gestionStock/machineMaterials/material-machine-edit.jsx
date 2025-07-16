@@ -26,6 +26,7 @@ import {
   TrendingDown,
   History,
   Calculator,
+  Building2,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Toaster } from "@/components/ui/toaster"
@@ -41,7 +42,6 @@ const MaterialMachineEdit = () => {
   const [material, setMaterial] = useState(null)
   const [machine, setMachine] = useState(null)
   const [allocatedStock, setAllocatedStock] = useState(0)
-  const [adjustmentMode, setAdjustmentMode] = useState("absolute") // Only using "absolute" mode
   const [adjustmentAmount, setAdjustmentAmount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -52,13 +52,12 @@ const MaterialMachineEdit = () => {
   const [maxAvailableStock, setMaxAvailableStock] = useState(0)
 
   // Calculate new values based on adjustment mode
-  const calculatedNewStock =
-    adjustmentMode === "absolute" ? allocatedStock : Math.max(0, originalStock + adjustmentAmount)
+  const calculatedNewStock = allocatedStock
 
   // Calculate the difference for display
   const stockDifference = calculatedNewStock - originalStock
 
-  // Calculate available material stock after adjustment (more accurate calculation)
+  // Calculate available material stock after adjustment
   const availableAfterAdjustment = maxAvailableStock - calculatedNewStock
 
   useEffect(() => {
@@ -81,8 +80,6 @@ const MaterialMachineEdit = () => {
   const fetchAllocationDetails = async () => {
     try {
       setLoading(true)
-      // Since there's no direct endpoint to get a single allocation by ID,
-      // we'll get all allocations and find the one we need
       const allAllocations = await getAllAllocations()
       const currentAllocation = allAllocations.find((a) => a._id === id)
 
@@ -92,7 +89,6 @@ const MaterialMachineEdit = () => {
           description: "Allocation not found",
           variant: "destructive",
         })
-        // navigate("/machinematerial")
         return
       }
 
@@ -142,22 +138,17 @@ const MaterialMachineEdit = () => {
 
     setSaving(true)
     try {
-      // Get current user ID from localStorage - this should be an ObjectId string
       const userId = localStorage.getItem("userId")
 
-      // Important: Don't pass userId if it's not available
-      // Let the server handle the default value
       const updateData = {
         allocatedStock: calculatedNewStock,
         comment: comment || `Stock updated from ${originalStock} to ${calculatedNewStock}`,
       }
 
-      // Only add userId if it exists and is valid
       if (userId) {
         updateData.userId = userId
       }
 
-      // Use the update endpoint with the allocation ID
       const response = await updateAllocation(id, updateData)
 
       // Show success animation
@@ -196,11 +187,7 @@ const MaterialMachineEdit = () => {
   }
 
   const handleQuickAdjustment = (amount) => {
-    if (adjustmentMode === "absolute") {
-      setAllocatedStock(Math.max(0, allocatedStock + amount))
-    } else {
-      setAdjustmentAmount(Math.max(-originalStock, adjustmentAmount + amount))
-    }
+    setAllocatedStock(Math.max(0, allocatedStock + amount))
   }
 
   const resetToOriginal = () => {
@@ -241,6 +228,12 @@ const MaterialMachineEdit = () => {
             <Badge variant="outline" className="px-3 py-1">
               Machine: {machine?.name}
             </Badge>
+            {machine?.factory && (
+              <Badge variant="outline" className="px-3 py-1">
+                <Building2 className="w-3 h-3 mr-1" />
+                Factory: {machine.factory.name}
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -312,6 +305,15 @@ const MaterialMachineEdit = () => {
                               <Label className="text-sm text-muted-foreground">Status</Label>
                               <p className="font-medium capitalize">{machine?.status}</p>
                             </div>
+                            {machine?.factory && (
+                              <div>
+                                <Label className="text-sm text-muted-foreground">Factory</Label>
+                                <div className="flex items-center gap-2">
+                                  <Building2 className="w-4 h-4 text-muted-foreground" />
+                                  <p className="font-medium">{machine.factory.name}</p>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -328,21 +330,11 @@ const MaterialMachineEdit = () => {
                             variant="outline"
                             size="sm"
                             onClick={resetToOriginal}
-                            className="h-8 px-2 text-xs"
+                            className="h-8 px-2 text-xs bg-transparent"
                           >
                             <RefreshCw className="w-3 h-3 mr-1" />
                             Reset
                           </Button>
-                          <div className="flex items-center overflow-hidden border rounded-md">
-                            <Button
-                              type="button"
-                              variant="default"
-                              size="sm"
-                              className="h-8 px-3 text-white rounded-none bg-violet-600 hover:bg-violet-700"
-                            >
-                              Set Value
-                            </Button>
-                          </div>
                         </div>
                       </div>
 

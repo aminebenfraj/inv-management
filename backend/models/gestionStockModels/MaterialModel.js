@@ -34,9 +34,11 @@ const materialSchema = new Schema(
         description: String,
       },
     ],
+     factory: { type: mongoose.Schema.Types.ObjectId, ref: "Factory" },
   },
   { timestamps: true },
 )
+materialSchema.index({ factory: 1 })
 
 module.exports = mongoose.model("Material", materialSchema)
 

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +38,7 @@ import {
   FileText,
   AlertCircle,
   MoreHorizontal,
+  Building2,
 } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -49,12 +51,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
 
 import { getAllMaterials, deleteMaterial, getFilterOptions } from "../../../apis/gestionStockApi/materialApi"
+import { getAllFactories } from "../../../apis/gestionStockApi/factoryApi"
 import MainLayout from "@/components/MainLayout"
 
 // Animation variants
@@ -73,10 +75,13 @@ const MaterialList = () => {
   const { toast } = useToast()
   const navigate = useNavigate()
   const [materials, setMaterials] = useState([])
+  const [factories, setFactories] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [loadingFactories, setLoadingFactories] = useState(true)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("all")
+  const [selectedFactory, setSelectedFactory] = useState("all")
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [isHistoryMatch, setIsHistoryMatch] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -125,34 +130,28 @@ const MaterialList = () => {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  // Load filter options on component mount
-  const loadFilterOptions = useCallback(async () => {
+  useEffect(() => {
+    fetchFactories()
+  }, [])
+
+  const fetchFactories = async () => {
     try {
-      const options = {}
-
-      // Get manufacturer options directly from materials
-      const manufacturerData = await getFilterOptions("manufacturer")
-      options.manufacturers = manufacturerData.map((name) => ({ name }))
-
-      // Get other options from their respective collections
-      options.suppliers = await getFilterOptions("supplier")
-      options.categories = await getFilterOptions("category")
-      options.locations = await getFilterOptions("location")
-
-      setFilterOptions(options)
+      setLoadingFactories(true)
+      const data = await getAllFactories(1, 100) // Get all factories
+      const factoriesArray = Array.isArray(data) ? data : data?.data ? data.data : []
+      setFactories(factoriesArray)
     } catch (error) {
-      console.error("Error loading filter options:", error)
+      console.error("Failed to fetch factories:", error)
+      setFactories([])
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to load filter options",
+        title: "Warning",
+        description: "Failed to load factories. Factory filtering may not work properly.",
       })
+    } finally {
+      setLoadingFactories(false)
     }
-  }, [toast])
-
-  useEffect(() => {
-    loadFilterOptions()
-  }, [loadFilterOptions])
+  }
 
   const fetchMaterials = useCallback(async () => {
     try {
@@ -169,6 +168,7 @@ const MaterialList = () => {
       const combinedFilters = {
         ...filters,
         stockStatus: stockStatusFilter,
+        factory: selectedFactory === "all" ? "" : selectedFactory,
       }
 
       const response = await getAllMaterials(pagination.page, pagination.limit, debouncedSearch, combinedFilters, sort)
@@ -198,17 +198,45 @@ const MaterialList = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [pagination.page, pagination.limit, debouncedSearch, activeTab, filters, sort, toast])
+  }, [pagination.page, pagination.limit, debouncedSearch, activeTab, selectedFactory, filters, sort, toast])
 
-  // Fetch materials when pagination, search, filters or sort changes
   useEffect(() => {
     fetchMaterials()
-  }, [pagination.page, pagination.limit, debouncedSearch, activeTab, sort, fetchMaterials])
+  }, [debouncedSearch, activeTab, selectedFactory, filters, sort, pagination.page])
+
+  // Load filter options on component mount
+  const loadFilterOptions = useCallback(async () => {
+    try {
+      const options = {}
+
+      // Get manufacturer options directly from materials
+      const manufacturerData = await getFilterOptions("manufacturer")
+      options.manufacturers = manufacturerData.map((name) => ({ name }))
+
+      // Get other options from their respective collections
+      options.suppliers = await getFilterOptions("supplier")
+      options.categories = await getFilterOptions("category")
+      options.locations = await getFilterOptions("location")
+
+      setFilterOptions(options)
+    } catch (error) {
+      console.error("Error loading filter options:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load filter options",
+      })
+    }
+  }, [toast])
+
+  useEffect(() => {
+    loadFilterOptions()
+  }, [loadFilterOptions])
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setPagination((prev) => ({ ...prev, page: 1 }))
-  }, [filters])
+  }, [filters, selectedFactory])
 
   const handlePageChange = (newPage) => {
     setPagination((prev) => ({ ...prev, page: newPage }))
@@ -284,6 +312,7 @@ const MaterialList = () => {
       "Supplier",
       "Location",
       "Category",
+      "Factory",
     ]
 
     const rows = materials.map((material) => [
@@ -298,6 +327,7 @@ const MaterialList = () => {
       material.supplier ? material.supplier.companyName : "N/A",
       material.location ? material.location.location : "N/A",
       material.category ? material.category.name : "N/A",
+      material.factory ? material.factory.name : "N/A",
     ])
 
     const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n")
@@ -324,13 +354,23 @@ const MaterialList = () => {
     return "In Stock"
   }
 
+  const getSelectedFactoryName = () => {
+    if (selectedFactory === "all") return "All Factories"
+    const factory = factories.find((f) => f._id === selectedFactory)
+    return factory ? factory.name : "Unknown Factory"
+  }
+
   return (
     <MainLayout>
       <motion.div className="container py-6 mx-auto" initial="hidden" animate="visible" variants={fadeIn}>
         <div className="flex flex-col mb-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Materials</h1>
-            <p className="text-muted-foreground">Manage your inventory materials</p>
+            <h1 className="text-2xl font-bold">Materials - {getSelectedFactoryName()}</h1>
+            <p className="text-muted-foreground">
+              {selectedFactory === "all"
+                ? "Manage materials across all factories"
+                : `Manage materials in ${getSelectedFactoryName()}`}
+            </p>
           </div>
           <div className="flex flex-col gap-2 mt-4 sm:flex-row md:mt-0">
             <Link to="/materials/create">
@@ -357,6 +397,37 @@ const MaterialList = () => {
             <CardTitle>Filters</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Factory Selection */}
+            <div className="p-4 mb-4 border border-blue-200 rounded-lg bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-blue-600" />
+                  <span className="font-medium text-blue-900 dark:text-blue-100">Select Factory:</span>
+                </div>
+                <Select value={selectedFactory} onValueChange={setSelectedFactory} disabled={loadingFactories}>
+                  <SelectTrigger className="w-64 bg-white dark:bg-zinc-800">
+                    <SelectValue placeholder={loadingFactories ? "Loading..." : "Select factory"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <div className="flex items-center gap-2">
+                        <Filter className="w-4 h-4" />
+                        All Factories
+                      </div>
+                    </SelectItem>
+                    {factories.map((factory) => (
+                      <SelectItem key={factory._id} value={factory._id}>
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4" />
+                          {factory.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="flex flex-col gap-4 md:flex-row">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -383,7 +454,7 @@ const MaterialList = () => {
               </Tabs>
               <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10">
+                  <Button variant="outline" size="sm" className="h-10 bg-transparent">
                     <Filter className="w-4 h-4 mr-2" />
                     Advanced Filters
                     {Object.values(filters).some((v) => v !== "" && v !== null) && (
@@ -593,18 +664,20 @@ const MaterialList = () => {
                 <FileText className="w-12 h-12 mb-4 text-muted-foreground" />
                 <h3 className="text-lg font-medium">No materials found</h3>
                 <p className="mt-1 mb-4 text-muted-foreground">
-                  {searchTerm || Object.values(filters).some((v) => v !== "" && v !== null)
-                    ? "Try adjusting your filters"
+                  {searchTerm || Object.values(filters).some((v) => v !== "" && v !== null) || selectedFactory !== "all"
+                    ? "Try adjusting your search or filters"
                     : "Create your first material to get started"}
                 </p>
-                {!searchTerm && !Object.values(filters).some((v) => v !== "" && v !== null) && (
-                  <Link to="/materials/create">
-                    <Button>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add New Material
-                    </Button>
-                  </Link>
-                )}
+                {!searchTerm &&
+                  !Object.values(filters).some((v) => v !== "" && v !== null) &&
+                  selectedFactory === "all" && (
+                    <Link to="/materials/create">
+                      <Button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add New Material
+                      </Button>
+                    </Link>
+                  )}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -653,6 +726,7 @@ const MaterialList = () => {
                         </Button>
                       </TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Factory</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -683,6 +757,16 @@ const MaterialList = () => {
                           <TableCell>${material.price.toFixed(2)}</TableCell>
                           <TableCell>
                             <Badge variant={getStockStatusVariant(material)}>{getStockStatus(material)}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {material.factory ? (
+                              <div className="flex items-center gap-2">
+                                <Building2 className="w-4 h-4" />
+                                {material.factory.name}
+                              </div>
+                            ) : (
+                              "N/A"
+                            )}
                           </TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
