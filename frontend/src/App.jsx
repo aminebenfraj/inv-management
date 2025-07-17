@@ -19,6 +19,12 @@ import Home from "./pages/homepage/Home"
 import ProfilePage from "./pages/user/profile-page"
 import SettingsPage from "./pages/user/settings-page"
 
+// Dashboard Pages - NEW
+import FactoryDashboard from "./pages/gestionStock/machine_dashboard/index"
+import MachinesPage from "./pages/gestionStock/machine_dashboard/machines"
+import MaterialsPage from "./pages/gestionStock/machine_dashboard/materials"
+import AllocationsPage from "./pages/gestionStock/machine_dashboard/allocations"
+
 // Inventory Management Pages
 import ShowCategories from "./pages/gestionStock/categories/ShowCategories"
 import CreateCategory from "./pages/gestionStock/categories/CreateCategory"
@@ -150,7 +156,40 @@ function App() {
           }
         />
 
-      
+        {/* NEW: Factory Dashboard Routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <FactoryDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/machines"
+          element={
+            <ProtectedRoute>
+              <MachinesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/materials"
+          element={
+            <ProtectedRoute>
+              <MaterialsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/allocations"
+          element={
+            <ProtectedRoute>
+              <AllocationsPage />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Categories routes */}
         <Route
           path="categories"
@@ -228,12 +267,10 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Added Machine Details route for consistency */}
         <Route
           path="machines/details/:id"
           element={
             <ProtectedRoute>
-              {/* Assuming you have a MachineDetails component, or this will navigate to EditMachine for now */}
               <EditMachine /> 
             </ProtectedRoute>
           }
@@ -332,6 +369,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+
         {/* Pedido (Order) routes */}
         <Route
           path="/pedido"
@@ -443,6 +481,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Factory routes */}
         <Route
           path="/factories"
           element={
@@ -454,7 +494,7 @@ function App() {
         <Route
           path="/factories/create"
           element={
-            <ProtectedRoute requiredRoles={inventoryRoles}> {/* Assuming inventory roles can create factories */}
+            <ProtectedRoute requiredRoles={inventoryRoles}>
               <CreateFactory />
             </ProtectedRoute>
           }
@@ -462,7 +502,7 @@ function App() {
         <Route
           path="/factories/edit/:id"
           element={
-            <ProtectedRoute >
+            <ProtectedRoute>
               <EditFactory />
             </ProtectedRoute>
           }
@@ -470,12 +510,13 @@ function App() {
         <Route
           path="/factories/detail/:id" 
           element={
-            <ProtectedRoute >
+            <ProtectedRoute>
               <FactoryDetails />
             </ProtectedRoute>
           }
         />
-        {/* Machine Dashboard route */}
+
+        {/* Machine Dashboard route (legacy) */}
         <Route
           path="/machine-dashboard"
           element={
