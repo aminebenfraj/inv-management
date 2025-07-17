@@ -3,8 +3,13 @@ import { apiRequest } from "../api"
 const BASE_URL = "api/allocate"
 
 // Get all allocations
-export const getAllAllocations = () => {
-  return apiRequest("GET", `${BASE_URL}/allocates`)
+export const getAllAllocations = (page = 1, limit = 100) => {
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  })
+
+  return apiRequest("GET", `${BASE_URL}/allocates?${queryParams.toString()}`)
 }
 
 // Update an existing allocation

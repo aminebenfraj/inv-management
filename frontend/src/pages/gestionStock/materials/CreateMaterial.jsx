@@ -368,25 +368,7 @@ const CreateMaterial = () => {
                           placeholder="Enter material description"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="photo">Photo URL</Label>
-                        <Input
-                          id="photo"
-                          name="photo"
-                          value={material.photo}
-                          onChange={handleChange}
-                          placeholder="Enter photo URL"
-                        />
-                        {material.photo && (
-                          <div className="mt-2">
-                            <img
-                              src={material.photo || "/placeholder.svg"}
-                              alt={material.reference}
-                              className="object-cover w-full h-auto rounded-md max-h-40"
-                            />
-                          </div>
-                        )}
-                      </div>
+                     
                     </motion.div>
                   )}
 

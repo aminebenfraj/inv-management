@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Pencil, Clock, Package, Settings, Building2 } from "lucide-react"
+import { ArrowLeft, Pencil, Clock, Package, Settings, Building2, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Toaster } from "@/components/ui/toaster"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import MainLayout from "@/components/MainLayout"
 
 const MaterialMachineDetails = () => {
@@ -20,18 +21,36 @@ const MaterialMachineDetails = () => {
   const { toast } = useToast()
   const [allocation, setAllocation] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    fetchAllocationDetails()
+    if (id) {
+      fetchAllocationDetails()
+    }
   }, [id])
 
   const fetchAllocationDetails = async () => {
     try {
       setLoading(true)
-      const allAllocations = await getAllAllocations()
+      setError(null)
+
+      const response = await getAllAllocations()
+      console.log("API Response:", response) // Debug log
+
+      // Handle different response formats
+      let allAllocations = []
+      if (response && response.data && Array.isArray(response.data)) {
+        allAllocations = response.data
+      } else if (Array.isArray(response)) {
+        allAllocations = response
+      } else {
+        throw new Error("Invalid response format from API")
+      }
+
       const currentAllocation = allAllocations.find((a) => a._id === id)
 
       if (!currentAllocation) {
+        setError("Allocation not found")
         toast({
           title: "Error",
           description: "Allocation not found",
@@ -47,15 +66,22 @@ const MaterialMachineDetails = () => {
 
       setAllocation(currentAllocation)
 
-      // Fetch material details to get current stock
+      // Fetch material details to get current stock if material ID exists
       if (currentAllocation.material?._id) {
-        const materialDetails = await getMaterialById(currentAllocation.material._id)
-        setAllocation((prev) => ({
-          ...prev,
-          material: materialDetails,
-        }))
+        try {
+          const materialDetails = await getMaterialById(currentAllocation.material._id)
+          setAllocation((prev) => ({
+            ...prev,
+            material: materialDetails,
+          }))
+        } catch (materialError) {
+          console.error("Error fetching material details:", materialError)
+          // Don't fail the whole component if material details can't be fetched
+        }
       }
     } catch (error) {
+      console.error("Error fetching allocation details:", error)
+      setError(error.message || "Failed to fetch allocation details")
       toast({
         title: "Error",
         description: "Failed to fetch allocation details",
@@ -67,21 +93,70 @@ const MaterialMachineDetails = () => {
   }
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date)
+    if (!dateString) return "N/A"
+    try {
+      const date = new Date(dateString)
+      return new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(date)
+    } catch (error) {
+      return "Invalid Date"
+    }
   }
 
+  // Loading state
   if (loading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-64">
           <div className="w-8 h-8 border-4 rounded-full animate-spin border-primary border-t-transparent"></div>
+          <span className="ml-2">Loading allocation details...</span>
+        </div>
+      </MainLayout>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="container py-8 mx-auto">
+          <Alert variant="destructive" className="max-w-md mx-auto">
+            <AlertCircle className="w-4 h-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <div className="flex justify-center mt-4">
+            <Button variant="outline" onClick={() => navigate("/machinematerial")}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to List
+            </Button>
+          </div>
+        </div>
+      </MainLayout>
+    )
+  }
+
+  // No allocation found
+  if (!allocation) {
+    return (
+      <MainLayout>
+        <div className="container py-8 mx-auto">
+          <Alert className="max-w-md mx-auto">
+            <AlertCircle className="w-4 h-4" />
+            <AlertTitle>Not Found</AlertTitle>
+            <AlertDescription>The requested allocation could not be found.</AlertDescription>
+          </Alert>
+          <div className="flex justify-center mt-4">
+            <Button variant="outline" onClick={() => navigate("/machinematerial")}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to List
+            </Button>
+          </div>
         </div>
       </MainLayout>
     )
@@ -134,23 +209,23 @@ const MaterialMachineDetails = () => {
                         <div className="p-4 space-y-2 border rounded-md">
                           <div>
                             <span className="text-sm text-muted-foreground">Reference:</span>
-                            <p className="font-medium">{allocation.material?.reference}</p>
+                            <p className="font-medium">{allocation.material?.reference || "N/A"}</p>
                           </div>
                           <div>
                             <span className="text-sm text-muted-foreground">Description:</span>
-                            <p className="font-medium">{allocation.material?.description}</p>
+                            <p className="font-medium">{allocation.material?.description || "N/A"}</p>
                           </div>
                           <div>
                             <span className="text-sm text-muted-foreground">Manufacturer:</span>
-                            <p className="font-medium">{allocation.material?.manufacturer}</p>
+                            <p className="font-medium">{allocation.material?.manufacturer || "N/A"}</p>
                           </div>
                           <div>
                             <span className="text-sm text-muted-foreground">Current Stock:</span>
-                            <p className="font-medium">{allocation.material?.currentStock}</p>
+                            <p className="font-medium">{allocation.material?.currentStock ?? "N/A"}</p>
                           </div>
                           <div>
                             <span className="text-sm text-muted-foreground">Minimum Stock:</span>
-                            <p className="font-medium">{allocation.material?.minimumStock}</p>
+                            <p className="font-medium">{allocation.material?.minimumStock ?? "N/A"}</p>
                           </div>
                           <div>
                             <span className="text-sm text-muted-foreground">Category:</span>
@@ -164,15 +239,15 @@ const MaterialMachineDetails = () => {
                         <div className="p-4 space-y-2 border rounded-md">
                           <div>
                             <span className="text-sm text-muted-foreground">Name:</span>
-                            <p className="font-medium">{allocation.machine?.name}</p>
+                            <p className="font-medium">{allocation.machine?.name || "N/A"}</p>
                           </div>
                           <div>
                             <span className="text-sm text-muted-foreground">Description:</span>
-                            <p className="font-medium">{allocation.machine?.description}</p>
+                            <p className="font-medium">{allocation.machine?.description || "N/A"}</p>
                           </div>
                           <div>
                             <span className="text-sm text-muted-foreground">Status:</span>
-                            <p className="font-medium capitalize">{allocation.machine?.status}</p>
+                            <p className="font-medium capitalize">{allocation.machine?.status || "N/A"}</p>
                           </div>
                           {allocation.machine?.factory && (
                             <div>
@@ -195,11 +270,11 @@ const MaterialMachineDetails = () => {
                         <div className="grid gap-4 md:grid-cols-2">
                           <div>
                             <span className="text-sm text-muted-foreground">Allocated Stock:</span>
-                            <p className="text-2xl font-bold">{allocation.allocatedStock}</p>
+                            <p className="text-2xl font-bold">{allocation.allocatedStock ?? 0}</p>
                           </div>
                           <div>
                             <span className="text-sm text-muted-foreground">Last Updated:</span>
-                            <p className="font-medium">{new Date(allocation.updatedAt).toLocaleString()}</p>
+                            <p className="font-medium">{formatDate(allocation.updatedAt)}</p>
                           </div>
                         </div>
                       </div>
@@ -238,9 +313,9 @@ const MaterialMachineDetails = () => {
                                   className="hover:bg-muted/50"
                                 >
                                   <td className="px-4 py-2 text-sm">{formatDate(entry.date)}</td>
-                                  <td className="px-4 py-2 text-sm">{entry.previousStock}</td>
-                                  <td className="px-4 py-2 text-sm">{entry.newStock}</td>
-                                  <td className="px-4 py-2 text-sm">{entry.comment}</td>
+                                  <td className="px-4 py-2 text-sm">{entry.previousStock ?? "N/A"}</td>
+                                  <td className="px-4 py-2 text-sm">{entry.newStock ?? "N/A"}</td>
+                                  <td className="px-4 py-2 text-sm">{entry.comment || "No comment"}</td>
                                 </motion.tr>
                               ))}
                             </tbody>
@@ -274,12 +349,14 @@ const MaterialMachineDetails = () => {
                       Edit Allocation
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" className="justify-start w-full bg-transparent">
-                    <Link to={`/materials/edit/${allocation.material?._id}`}>
-                      <Package className="w-4 h-4 mr-2" />
-                      View Material Details
-                    </Link>
-                  </Button>
+                  {allocation.material?._id && (
+                    <Button asChild variant="outline" className="justify-start w-full bg-transparent">
+                      <Link to={`/materials/edit/${allocation.material._id}`}>
+                        <Package className="w-4 h-4 mr-2" />
+                        View Material Details
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -292,11 +369,11 @@ const MaterialMachineDetails = () => {
                 <div className="space-y-4">
                   <div>
                     <span className="text-sm text-muted-foreground">Material:</span>
-                    <p className="font-medium">{allocation.material?.reference}</p>
+                    <p className="font-medium">{allocation.material?.reference || "N/A"}</p>
                   </div>
                   <div>
                     <span className="text-sm text-muted-foreground">Machine:</span>
-                    <p className="font-medium">{allocation.machine?.name}</p>
+                    <p className="font-medium">{allocation.machine?.name || "N/A"}</p>
                   </div>
                   {allocation.machine?.factory && (
                     <div>
@@ -309,16 +386,16 @@ const MaterialMachineDetails = () => {
                   )}
                   <div>
                     <span className="text-sm text-muted-foreground">Allocated Stock:</span>
-                    <p className="text-xl font-bold">{allocation.allocatedStock}</p>
+                    <p className="text-xl font-bold">{allocation.allocatedStock ?? 0}</p>
                   </div>
                   <Separator />
                   <div>
                     <span className="text-sm text-muted-foreground">Created:</span>
-                    <p className="font-medium">{new Date(allocation.createdAt).toLocaleDateString()}</p>
+                    <p className="font-medium">{formatDate(allocation.createdAt)}</p>
                   </div>
                   <div>
                     <span className="text-sm text-muted-foreground">Last Updated:</span>
-                    <p className="font-medium">{new Date(allocation.updatedAt).toLocaleDateString()}</p>
+                    <p className="font-medium">{formatDate(allocation.updatedAt)}</p>
                   </div>
                 </div>
               </CardContent>

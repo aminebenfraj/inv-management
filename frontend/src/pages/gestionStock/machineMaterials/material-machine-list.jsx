@@ -77,13 +77,30 @@ const MaterialMachineList = () => {
     }
   }, [searchTerm, allocations, factoryFilter])
 
-  const fetchAllocations = async () => {
+ const fetchAllocations = async () => {
     try {
       setLoading(true)
       setError(null)
-      const data = await getAllAllocations()
-      setAllocations(Array.isArray(data) ? data : [])
-      setFilteredAllocations(Array.isArray(data) ? data : [])
+      const response = await getAllAllocations()
+
+      console.log("API Response:", response) // Debug log
+
+      // Handle paginated response structure
+      let allocationsData = []
+      if (response && response.data && Array.isArray(response.data)) {
+        // Paginated response format
+        allocationsData = response.data
+        console.log("Using paginated data:", allocationsData.length, "items") // Debug log
+      } else if (Array.isArray(response)) {
+        // Direct array response format
+        allocationsData = response
+        console.log("Using direct array data:", allocationsData.length, "items") // Debug log
+      } else {
+        console.log("Unexpected response format:", typeof response, response) // Debug log
+      }
+
+      setAllocations(allocationsData)
+      setFilteredAllocations(allocationsData)
     } catch (error) {
       console.error("Error fetching allocations:", error)
       setError("Failed to fetch allocations. Please try again.")

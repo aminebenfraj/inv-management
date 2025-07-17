@@ -172,6 +172,11 @@ const MaterialMachineCreate = () => {
     }
   }
 
+  // Helper function to validate MongoDB ObjectId format
+  const isValidObjectId = (id) => {
+    return /^[0-9a-fA-F]{24}$/.test(id)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -231,7 +236,7 @@ const MaterialMachineCreate = () => {
 
     setLoading(true)
     try {
-      // Get current user ID from localStorage
+      // Get current user ID from localStorage and validate it
       const userId = localStorage.getItem("userId")
 
       // Prepare allocations with proper integer values
@@ -240,11 +245,18 @@ const MaterialMachineCreate = () => {
         allocatedStock: Number.parseInt(alloc.allocatedStock, 10),
       }))
 
-      const response = await allocateStock({
+      // Prepare the request payload
+      const requestPayload = {
         materialId: selectedMaterial,
         allocations: formattedAllocations,
-        userId: userId || "unknown",
-      })
+      }
+
+      // Only include userId if it's a valid ObjectId
+      if (userId && isValidObjectId(userId)) {
+        requestPayload.userId = userId
+      }
+
+      const response = await allocateStock(requestPayload)
 
       toast({
         title: "Success",
@@ -268,7 +280,7 @@ const MaterialMachineCreate = () => {
       console.error("Error allocating stock:", error)
       toast({
         title: "Error",
-        description: error.message || "Failed to allocate stock",
+        description: error.response?.data?.error || error.message || "Failed to allocate stock",
         variant: "destructive",
       })
     } finally {
