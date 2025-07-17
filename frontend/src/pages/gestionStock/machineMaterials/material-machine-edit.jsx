@@ -50,6 +50,7 @@ const MaterialMachineEdit = () => {
   const [activeTab, setActiveTab] = useState("edit")
   const [comment, setComment] = useState("")
   const [maxAvailableStock, setMaxAvailableStock] = useState(0)
+  const [error, setError] = useState(null)
 
   // Calculate new values based on adjustment mode
   const calculatedNewStock = allocatedStock
@@ -61,7 +62,9 @@ const MaterialMachineEdit = () => {
   const availableAfterAdjustment = maxAvailableStock - calculatedNewStock
 
   useEffect(() => {
-    fetchAllocationDetails()
+    if (id) {
+      fetchAllocationDetails()
+    }
   }, [id])
 
   useEffect(() => {
@@ -80,10 +83,33 @@ const MaterialMachineEdit = () => {
   const fetchAllocationDetails = async () => {
     try {
       setLoading(true)
-      const allAllocations = await getAllAllocations()
+      setError(null)
+
+      console.log("Fetching allocations for ID:", id) // Debug log
+
+      const response = await getAllAllocations()
+      console.log("Raw API Response:", response) // Debug log
+
+      // Handle different response formats
+      let allAllocations = []
+      if (response && response.data && Array.isArray(response.data)) {
+        // Paginated response format
+        allAllocations = response.data
+        console.log("Using paginated data:", allAllocations.length, "items") // Debug log
+      } else if (Array.isArray(response)) {
+        // Direct array response format
+        allAllocations = response
+        console.log("Using direct array data:", allAllocations.length, "items") // Debug log
+      } else {
+        console.log("Unexpected response format:", typeof response, response) // Debug log
+        throw new Error("Invalid response format from API")
+      }
+
       const currentAllocation = allAllocations.find((a) => a._id === id)
+      console.log("Found allocation:", currentAllocation) // Debug log
 
       if (!currentAllocation) {
+        setError("Allocation not found")
         toast({
           title: "Error",
           description: "Allocation not found",
@@ -95,15 +121,27 @@ const MaterialMachineEdit = () => {
       setAllocation(currentAllocation)
       setMaterial(currentAllocation.material)
       setMachine(currentAllocation.machine)
-      setAllocatedStock(currentAllocation.allocatedStock)
-      setOriginalStock(currentAllocation.allocatedStock)
+      setAllocatedStock(currentAllocation.allocatedStock || 0)
+      setOriginalStock(currentAllocation.allocatedStock || 0)
 
       // Fetch material details to get current stock
       if (currentAllocation.material?._id) {
-        const materialDetails = await getMaterialById(currentAllocation.material._id)
-        setMaterial(materialDetails)
+        try {
+          const materialDetails = await getMaterialById(currentAllocation.material._id)
+          setMaterial(materialDetails)
+        } catch (materialError) {
+          console.error("Error fetching material details:", materialError)
+          // Don't fail the whole component if material details can't be fetched
+          toast({
+            title: "Warning",
+            description: "Could not fetch complete material details",
+            variant: "default",
+          })
+        }
       }
     } catch (error) {
+      console.error("Error fetching allocation details:", error)
+      setError(error.message || "Failed to fetch allocation details")
       toast({
         title: "Error",
         description: "Failed to fetch allocation details",
@@ -138,6 +176,11 @@ const MaterialMachineEdit = () => {
 
     setSaving(true)
     try {
+      // Helper function to validate MongoDB ObjectId format
+      const isValidObjectId = (id) => {
+        return /^[0-9a-fA-F]{24}$/.test(id)
+      }
+
       const userId = localStorage.getItem("userId")
 
       const updateData = {
@@ -145,7 +188,8 @@ const MaterialMachineEdit = () => {
         comment: comment || `Stock updated from ${originalStock} to ${calculatedNewStock}`,
       }
 
-      if (userId) {
+      // Only include userId if it's a valid ObjectId
+      if (userId && isValidObjectId(userId)) {
         updateData.userId = userId
       }
 
@@ -195,11 +239,55 @@ const MaterialMachineEdit = () => {
     setAdjustmentAmount(0)
   }
 
+  // Loading state
   if (loading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-64">
           <div className="w-8 h-8 border-4 rounded-full animate-spin border-violet-500 border-t-transparent"></div>
+          <span className="ml-2">Loading allocation details...</span>
+        </div>
+      </MainLayout>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="container py-8 mx-auto">
+          <Alert variant="destructive" className="max-w-md mx-auto">
+            <AlertCircle className="w-4 h-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <div className="flex justify-center mt-4">
+            <Button variant="outline" onClick={() => navigate("/machinematerial")}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to List
+            </Button>
+          </div>
+        </div>
+      </MainLayout>
+    )
+  }
+
+  // No allocation found
+  if (!allocation) {
+    return (
+      <MainLayout>
+        <div className="container py-8 mx-auto">
+          <Alert className="max-w-md mx-auto">
+            <AlertCircle className="w-4 h-4" />
+            <AlertTitle>Not Found</AlertTitle>
+            <AlertDescription>The requested allocation could not be found.</AlertDescription>
+          </Alert>
+          <div className="flex justify-center mt-4">
+            <Button variant="outline" onClick={() => navigate("/machinematerial")}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to List
+            </Button>
+          </div>
         </div>
       </MainLayout>
     )
@@ -223,10 +311,10 @@ const MaterialMachineEdit = () => {
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="px-3 py-1">
-              Material: {material?.reference}
+              Material: {material?.reference || "N/A"}
             </Badge>
             <Badge variant="outline" className="px-3 py-1">
-              Machine: {machine?.name}
+              Machine: {machine?.name || "N/A"}
             </Badge>
             {machine?.factory && (
               <Badge variant="outline" className="px-3 py-1">
@@ -268,19 +356,19 @@ const MaterialMachineEdit = () => {
                           <div className="grid gap-2">
                             <div>
                               <Label className="text-sm text-muted-foreground">Reference</Label>
-                              <p className="font-medium">{material?.reference}</p>
+                              <p className="font-medium">{material?.reference || "N/A"}</p>
                             </div>
                             <div>
                               <Label className="text-sm text-muted-foreground">Description</Label>
-                              <p className="font-medium">{material?.description}</p>
+                              <p className="font-medium">{material?.description || "N/A"}</p>
                             </div>
                             <div>
                               <Label className="text-sm text-muted-foreground">Current Stock</Label>
-                              <p className="font-medium">{material?.currentStock}</p>
+                              <p className="font-medium">{material?.currentStock ?? "N/A"}</p>
                             </div>
                             <div>
                               <Label className="text-sm text-muted-foreground">Manufacturer</Label>
-                              <p className="font-medium">{material?.manufacturer}</p>
+                              <p className="font-medium">{material?.manufacturer || "N/A"}</p>
                             </div>
                           </div>
                         </div>
@@ -295,15 +383,15 @@ const MaterialMachineEdit = () => {
                           <div className="grid gap-2">
                             <div>
                               <Label className="text-sm text-muted-foreground">Name</Label>
-                              <p className="font-medium">{machine?.name}</p>
+                              <p className="font-medium">{machine?.name || "N/A"}</p>
                             </div>
                             <div>
                               <Label className="text-sm text-muted-foreground">Description</Label>
-                              <p className="font-medium">{machine?.description}</p>
+                              <p className="font-medium">{machine?.description || "N/A"}</p>
                             </div>
                             <div>
                               <Label className="text-sm text-muted-foreground">Status</Label>
-                              <p className="font-medium capitalize">{machine?.status}</p>
+                              <p className="font-medium capitalize">{machine?.status || "N/A"}</p>
                             </div>
                             {machine?.factory && (
                               <div>
@@ -543,12 +631,14 @@ const MaterialMachineEdit = () => {
                     <tbody className="divide-y divide-border">
                       {allocation?.history?.length > 0 ? (
                         allocation.history.map((entry, index) => {
-                          const change = entry.newStock - entry.previousStock
+                          const change = (entry.newStock || 0) - (entry.previousStock || 0)
                           return (
                             <tr key={index} className="hover:bg-muted/50">
-                              <td className="px-4 py-3 text-sm">{new Date(entry.date).toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm">{entry.previousStock}</td>
-                              <td className="px-4 py-3 text-sm">{entry.newStock}</td>
+                              <td className="px-4 py-3 text-sm">
+                                {entry.date ? new Date(entry.date).toLocaleString() : "N/A"}
+                              </td>
+                              <td className="px-4 py-3 text-sm">{entry.previousStock ?? "N/A"}</td>
+                              <td className="px-4 py-3 text-sm">{entry.newStock ?? "N/A"}</td>
                               <td className="px-4 py-3 text-sm">
                                 <Badge
                                   variant={change > 0 ? "default" : change < 0 ? "destructive" : "outline"}
@@ -568,7 +658,7 @@ const MaterialMachineEdit = () => {
                                   )}
                                 </Badge>
                               </td>
-                              <td className="px-4 py-3 text-sm">{entry.comment}</td>
+                              <td className="px-4 py-3 text-sm">{entry.comment || "No comment"}</td>
                             </tr>
                           )
                         })
