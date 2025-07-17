@@ -34,7 +34,7 @@ const navigationItems = [
     id: "machine-dashboard",
     label: "machine dashboard",
     icon: LayoutDashboard,
-    path: "/machine-dashboard",
+    path: "/dashboard",
     isMainPage: true,
   },
   {

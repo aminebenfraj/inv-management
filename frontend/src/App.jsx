@@ -46,7 +46,6 @@ import Materialmachinelist from "../src/pages/gestionStock/machineMaterials/mate
 import Materialmachinecreate from "../src/pages/gestionStock/machineMaterials/material-machine-create"
 import Materialmachinedetails from "../src/pages/gestionStock/machineMaterials/material-machine-details"
 import Materialmachineedit from "../src/pages/gestionStock/machineMaterials/material-machine-edit"
-import MachineDashboard from "./pages/gestionStock/machine_dashboard/machine-dashboard"
 import CreateFactory from "./pages/factories/CreateFactory"
 import EditFactory from "./pages/factories/EditFactory"
 import ShowFactories from "./pages/factories/ShowFactories"
@@ -516,15 +515,7 @@ function App() {
           }
         />
 
-        {/* Machine Dashboard route (legacy) */}
-        <Route
-          path="/machine-dashboard"
-          element={
-            <ProtectedRoute>
-              <MachineDashboard />
-            </ProtectedRoute>
-          }
-        />
+       
 
         {/* Catch-all route - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
