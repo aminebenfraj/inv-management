@@ -67,31 +67,11 @@ import EditTipo from "./pages/pedido/tipo/edit-tipo"
 import CreateTipo from "./pages/pedido/tipo/create-tipo"
 
 function App() {
-  // Define role groups for different sections
+  // Simplified role groups
   const adminRoles = ["Admin"]
-  const productionRoles = [
-    "Admin",
-    "Manager",
-    "PRODUCCION",
-    "Manufacturing Eng. Manager",
-    "Manufacturing Eng. Leader",
-    "Project Manager",
-    "Business Manager",
-    "Financial Leader",
-    "Methodes UAP1&3",
-    "Methodes UAP2",
-    "Maintenance Manager",
-    "Maintenance Leader UAP2",
-    "Prod. Plant Manager UAP1",
-    "Prod. Plant Manager UAP2",
-    "Quality Manager",
-    "Quality Leader UAP1",
-    "Quality Leader UAP2",
-    "Quality Leader UAP3",
-  ]
-  const logisticRoles = ["Admin", "LOGISTICA", "PRODUCCION"]
-  const inventoryRoles = ["Admin", "Manager"]
-  const qualityRoles = ["Admin", "Manager"]
+  const adminManagerRoles = ["Admin", "Manager"] // Manager can access everything except user management
+  const allRoles = ["Admin", "Manager", "User"] // All users can access basic functionality
+  const factoryOnlyRoles = ["Admin", "Manager", "User"] // All users can access factories
 
   return (
     <AuthProvider>
@@ -101,7 +81,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Home route - redirects to login if not authenticated */}
+        {/* Home route - accessible to all authenticated users */}
         <Route
           path="/"
           element={
@@ -111,7 +91,7 @@ function App() {
           }
         />
 
-        {/* User profile routes */}
+        {/* User profile routes - accessible to all authenticated users */}
         <Route
           path="/profile"
           element={
@@ -129,7 +109,7 @@ function App() {
           }
         />
 
-        {/* Admin routes */}
+        {/* Admin routes - ONLY Admin can access user management */}
         <Route
           path="/admin"
           element={
@@ -155,11 +135,11 @@ function App() {
           }
         />
 
-        {/* NEW: Factory Dashboard Routes */}
+        {/* Factory Dashboard Routes - Admin and Manager can access */}
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRoles={factoryOnlyRoles}>
               <FactoryDashboard />
             </ProtectedRoute>
           }
@@ -167,7 +147,7 @@ function App() {
         <Route
           path="/dashboard/machines"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
               <MachinesPage />
             </ProtectedRoute>
           }
@@ -175,7 +155,7 @@ function App() {
         <Route
           path="/dashboard/materials"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
               <MaterialsPage />
             </ProtectedRoute>
           }
@@ -183,309 +163,17 @@ function App() {
         <Route
           path="/dashboard/allocations"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
               <AllocationsPage />
             </ProtectedRoute>
           }
         />
 
-        {/* Categories routes */}
-        <Route
-          path="categories"
-          element={
-            <ProtectedRoute>
-              <ShowCategories />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="categories/create"
-          element={
-            <ProtectedRoute requiredRoles={inventoryRoles}>
-              <CreateCategory />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="categories/edit/:id"
-          element={
-            <ProtectedRoute requiredRoles={inventoryRoles}>
-              <EditCategory />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Locations routes */}
-        <Route
-          path="locations"
-          element={
-            <ProtectedRoute>
-              <ShowLocations />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="locations/create"
-          element={
-            <ProtectedRoute requiredRoles={inventoryRoles}>
-              <CreateLocation />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="locations/edit/:id"
-          element={
-            <ProtectedRoute requiredRoles={inventoryRoles}>
-              <EditLocation />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Machines routes */}
-        <Route
-          path="machines"
-          element={
-            <ProtectedRoute>
-              <ShowMachines />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/machines/create"
-          element={
-            <ProtectedRoute requiredRoles={productionRoles}>
-              <CreateMachine />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="machines/edit/:id"
-          element={
-            <ProtectedRoute requiredRoles={productionRoles}>
-              <EditMachine />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="machines/details/:id"
-          element={
-            <ProtectedRoute>
-              <EditMachine /> 
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Suppliers routes */}
-        <Route
-          path="/suppliers"
-          element={
-            <ProtectedRoute>
-              <SupplierList />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/suppliers/create"
-          element={
-            <ProtectedRoute requiredRoles={inventoryRoles}>
-              <CreateSupplier />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/suppliers/edit/:id"
-          element={
-            <ProtectedRoute requiredRoles={inventoryRoles}>
-              <EditSupplier />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Materials routes */}
-        <Route
-          path="/materials"
-          element={
-            <ProtectedRoute>
-              <MaterialList />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/materials/create"
-          element={
-            <ProtectedRoute requiredRoles={inventoryRoles}>
-              <CreateMaterial />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/materials/edit/:id"
-          element={
-            <ProtectedRoute requiredRoles={inventoryRoles}>
-              <EditMaterial />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/materials/details/:id"
-          element={
-            <ProtectedRoute>
-              <MaterialDetails />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Machine Material routes */}
-        <Route
-          path="/machinematerial"
-          element={
-            <ProtectedRoute>
-              <Materialmachinelist />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/machinematerial/create"
-          element={
-            <ProtectedRoute requiredRoles={inventoryRoles}>
-              <Materialmachinecreate />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/machinematerial/detail/:id"
-          element={
-            <ProtectedRoute>
-              <Materialmachinedetails />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/machinematerial/edit/:id"
-          element={
-            <ProtectedRoute requiredRoles={inventoryRoles}>
-              <Materialmachineedit />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Pedido (Order) routes */}
-        <Route
-          path="/pedido"
-          element={
-            <ProtectedRoute>
-              <PedidoList />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/pedido/create"
-          element={
-            <ProtectedRoute requiredRoles={logisticRoles}>
-              <Createpedido />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/pedido/edit/:id"
-          element={
-            <ProtectedRoute requiredRoles={logisticRoles}>
-              <Editpedido />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/pedido/:id"
-          element={
-            <ProtectedRoute>
-              <PedidoDetails />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Solicitante routes */}
-        <Route
-          path="/solicitante"
-          element={
-            <ProtectedRoute>
-              <ShowSolicitante />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/solicitante/edit/:id"
-          element={
-            <ProtectedRoute requiredRoles={logisticRoles}>
-              <EditSolicitante />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/solicitante/create"
-          element={
-            <ProtectedRoute requiredRoles={logisticRoles}>
-              <CreateSolicitante />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Table Status routes */}
-        <Route
-          path="/table-status"
-          element={
-            <ProtectedRoute>
-              <ShowTableStatus />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/table-status/edit/:id"
-          element={
-            <ProtectedRoute requiredRoles={logisticRoles}>
-              <EditTableStatus />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/table-status/create"
-          element={
-            <ProtectedRoute requiredRoles={logisticRoles}>
-              <CreateTableStatus />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Tipo routes */}
-        <Route
-          path="/tipo"
-          element={
-            <ProtectedRoute>
-              <ShowTipo />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/tipo/edit/:id"
-          element={
-            <ProtectedRoute requiredRoles={logisticRoles}>
-              <EditTipo />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/tipo/create"
-          element={
-            <ProtectedRoute requiredRoles={logisticRoles}>
-              <CreateTipo />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Factory routes */}
+        {/* Factory routes - All users can access factories */}
         <Route
           path="/factories"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRoles={factoryOnlyRoles}>
               <ShowFactories />
             </ProtectedRoute>
           }
@@ -493,7 +181,7 @@ function App() {
         <Route
           path="/factories/create"
           element={
-            <ProtectedRoute requiredRoles={inventoryRoles}>
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
               <CreateFactory />
             </ProtectedRoute>
           }
@@ -501,21 +189,311 @@ function App() {
         <Route
           path="/factories/edit/:id"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
               <EditFactory />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/factories/detail/:id" 
+          path="/factories/detail/:id"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
               <FactoryDetails />
             </ProtectedRoute>
           }
         />
 
-       
+        {/* Categories routes - Admin and Manager only */}
+        <Route
+          path="categories"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <ShowCategories />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="categories/create"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <CreateCategory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="categories/edit/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <EditCategory />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Locations routes - Admin and Manager only */}
+        <Route
+          path="locations"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <ShowLocations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="locations/create"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <CreateLocation />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="locations/edit/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <EditLocation />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Machines routes - Admin and Manager only */}
+        <Route
+          path="machines"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <ShowMachines />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/machines/create"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <CreateMachine />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="machines/edit/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <EditMachine />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="machines/details/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <EditMachine />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Suppliers routes - Admin and Manager only */}
+        <Route
+          path="/suppliers"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <SupplierList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/suppliers/create"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <CreateSupplier />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/suppliers/edit/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <EditSupplier />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Materials routes - Admin and Manager only */}
+        <Route
+          path="/materials"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <MaterialList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/materials/create"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <CreateMaterial />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/materials/edit/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <EditMaterial />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/materials/details/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <MaterialDetails />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Machine Material routes - Admin and Manager only */}
+        <Route
+          path="/machinematerial"
+          element={
+            <ProtectedRoute requiredRoles={factoryOnlyRoles}>
+              <Materialmachinelist />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/machinematerial/create"
+          element={
+            <ProtectedRoute requiredRoles={factoryOnlyRoles}>
+              <Materialmachinecreate />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/machinematerial/detail/:id"
+          element={
+            <ProtectedRoute requiredRoles={factoryOnlyRoles}>
+              <Materialmachinedetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/machinematerial/edit/:id"
+          element={
+            <ProtectedRoute requiredRoles={allRoles}>
+              <Materialmachineedit />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Pedido (Order) routes - Admin and Manager only */}
+        <Route
+          path="/pedido"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <PedidoList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pedido/create"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <Createpedido />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pedido/edit/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <Editpedido />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pedido/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <PedidoDetails />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Solicitante routes - Admin and Manager only */}
+        <Route
+          path="/solicitante"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <ShowSolicitante />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/solicitante/edit/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <EditSolicitante />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/solicitante/create"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <CreateSolicitante />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Table Status routes - Admin and Manager only */}
+        <Route
+          path="/table-status"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <ShowTableStatus />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/table-status/edit/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <EditTableStatus />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/table-status/create"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <CreateTableStatus />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Tipo routes - Admin and Manager only */}
+        <Route
+          path="/tipo"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <ShowTipo />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tipo/edit/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <EditTipo />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tipo/create"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <CreateTipo />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Catch-all route - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
