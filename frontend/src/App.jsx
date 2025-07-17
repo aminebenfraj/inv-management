@@ -20,7 +20,7 @@ import ProfilePage from "./pages/user/profile-page"
 import SettingsPage from "./pages/user/settings-page"
 
 // Dashboard Pages - NEW
-import FactoryDashboard from "./pages/gestionStock/machine_dashboard/index"
+import FactoryDashboard from "./pages/gestionStock/machine_dashboard/dash"
 import MachinesPage from "./pages/gestionStock/machine_dashboard/machines"
 import MaterialsPage from "./pages/gestionStock/machine_dashboard/materials"
 import AllocationsPage from "./pages/gestionStock/machine_dashboard/allocations"

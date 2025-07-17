@@ -58,13 +58,13 @@ const FactoryDetails = () => {
 
       // Fetch machines for this factory by passing factoryId as a filter
       // Assuming getAllMachines can accept a 'factory' filter
-      const machinesResponse = await getAllMachines(1, 1000, "", { factory: id })
+      const machinesResponse = await getAllMachines(1, 100, "", { factory: id })
       const factoryMachines = Array.isArray(machinesResponse) ? machinesResponse : machinesResponse?.data || []
       setMachines(factoryMachines)
 
       // Fetch materials for this factory by passing factoryId as a filter
       // Assuming getAllMaterials can accept a 'factory' filter
-      const materialsResponse = await getAllMaterials(1, 1000, "", { factory: id })
+      const materialsResponse = await getAllMaterials(1, 100, "", { factory: id })
       const factoryMaterials = Array.isArray(materialsResponse) ? materialsResponse : materialsResponse?.data || []
       setMaterials(factoryMaterials)
     } catch (error) {
