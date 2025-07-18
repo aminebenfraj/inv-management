@@ -29,7 +29,7 @@ const server = http.createServer(app);
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: ["http://localhost:5173", "https://inv-management-one.vercel.app", 'http://localhost:5173'],
   credentials: true,
 }));
 app.use(express.json()); // Removed duplicate app.use(express.json())
@@ -50,7 +50,6 @@ mongoose.connect(process.env.MONGODB_URI, {
 mongoose.set("strictQuery", false);
 
 // Routes
-
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
