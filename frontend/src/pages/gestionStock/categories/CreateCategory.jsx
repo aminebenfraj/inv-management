@@ -22,12 +22,12 @@ const CreateCategory = () => {
 
   const validateForm = () => {
     if (!name.trim()) {
-      setNameError("Category name is required")
+      setNameError("El nombre de la categoría es obligatorio")
       return false
     }
 
     if (name.trim().length < 2) {
-      setNameError("Category name must be at least 2 characters")
+      setNameError("El nombre de la categoría debe tener al menos 2 caracteres")
       return false
     }
 
@@ -46,16 +46,16 @@ const CreateCategory = () => {
     try {
       await createCategory({ name })
       toast({
-        title: "Success",
-        description: "Category created successfully!",
+        title: "Éxito",
+        description: "¡Categoría creada exitosamente!",
       })
       setTimeout(() => navigate("/categories"), 1000)
     } catch (error) {
-      console.error("Failed to create category:", error)
+      console.error("Error al crear la categoría:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.response?.data?.message || "Failed to create category. Please try again.",
+        description: error.response?.data?.message || "Error al crear la categoría. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setIsSubmitting(false)
@@ -69,14 +69,16 @@ const CreateCategory = () => {
         <div className="max-w-md mx-auto">
           <Card className="shadow-lg border-zinc-200 dark:border-zinc-700">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Create New Category</CardTitle>
-              <CardDescription>Add a new category to organize your items</CardDescription>
+              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                Crear Nueva Categoría
+              </CardTitle>
+              <CardDescription>Agrega una nueva categoría para organizar tus artículos</CardDescription>
             </CardHeader>
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name" className={nameError ? "text-red-500" : ""}>
-                    Category Name <span className="text-red-500">*</span>
+                    Nombre de la Categoría <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
                     <Tag
@@ -91,7 +93,7 @@ const CreateCategory = () => {
                         if (nameError) setNameError("")
                       }}
                       className={`w-full pl-10 ${nameError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                      placeholder="Enter category name"
+                      placeholder="Ingresa el nombre de la categoría"
                     />
                   </div>
                   {nameError && <p className="mt-1 text-sm text-red-500">{nameError}</p>}
@@ -100,7 +102,7 @@ const CreateCategory = () => {
               <CardFooter className="flex justify-between">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button type="button" variant="outline" onClick={() => navigate("/categories")}>
-                    Cancel
+                    Cancelar
                   </Button>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -112,12 +114,12 @@ const CreateCategory = () => {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Creating...
+                        Creando...
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4 mr-2" />
-                        Create Category
+                        Crear Categoría
                       </>
                     )}
                   </Button>

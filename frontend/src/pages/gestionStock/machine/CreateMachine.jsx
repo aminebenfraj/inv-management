@@ -44,11 +44,11 @@ const CreateMachine = () => {
       const factoriesArray = Array.isArray(data) ? data : data?.data ? data.data : []
       setFactories(factoriesArray)
     } catch (error) {
-      console.error("Failed to fetch factories:", error)
+      console.error("Error al obtener las fábricas:", error)
       setFactories([])
       toast({
-        title: "Warning",
-        description: "Failed to load factories. You can still create a machine without assigning it to a factory.",
+        title: "Advertencia",
+        description: "Error al cargar las fábricas. Aún puedes crear una máquina sin asignarla a una fábrica.",
         variant: "destructive",
       })
     } finally {
@@ -73,9 +73,9 @@ const CreateMachine = () => {
     const newErrors = {}
 
     if (!machine.name.trim()) {
-      newErrors.name = "Machine name is required"
+      newErrors.name = "El nombre de la máquina es obligatorio"
     } else if (machine.name.length < 3) {
-      newErrors.name = "Machine name must be at least 3 characters"
+      newErrors.name = "El nombre de la máquina debe tener al menos 3 caracteres"
     }
 
     setErrors(newErrors)
@@ -103,18 +103,18 @@ const CreateMachine = () => {
 
       await createMachine(machineData)
       toast({
-        title: "Success",
-        description: "Machine created successfully!",
+        title: "Éxito",
+        description: "¡Máquina creada exitosamente!",
         variant: "default",
       })
 
       setMachine({ name: "", description: "", status: "active", factory: "" })
       setTimeout(() => navigate("/machines"), 1500)
     } catch (error) {
-      console.error("Failed to create machine:", error)
+      console.error("Error al crear la máquina:", error)
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to create machine. Please try again.",
+        description: error.response?.data?.message || "Error al crear la máquina. Por favor, inténtalo de nuevo.",
         variant: "destructive",
       })
     } finally {
@@ -128,21 +128,21 @@ const CreateMachine = () => {
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-green-700 border-green-200 bg-green-50">
             <CheckCircle className="w-3 h-3" />
-            Active
+            Activa
           </Badge>
         )
       case "inactive":
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-red-700 border-red-200 bg-red-50">
             <PowerOff className="w-3 h-3" />
-            Inactive
+            Inactiva
           </Badge>
         )
       case "maintenance":
         return (
           <Badge variant="outline" className="flex items-center gap-1 bg-amber-50 text-amber-700 border-amber-200">
             <Wrench className="w-3 h-3" />
-            Maintenance
+            Mantenimiento
           </Badge>
         )
       default:
@@ -161,14 +161,14 @@ const CreateMachine = () => {
           <div className="flex items-center mb-6">
             <Button variant="ghost" onClick={() => navigate("/machines")} className="mr-auto">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Machines
+              Volver a Máquinas
             </Button>
           </div>
 
           <Card className="shadow-lg border-zinc-200 dark:border-zinc-700">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Create New Machine</CardTitle>
-              <CardDescription>Add a new machine to your inventory</CardDescription>
+              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Crear Nueva Máquina</CardTitle>
+              <CardDescription>Agrega una nueva máquina a tu inventario</CardDescription>
             </CardHeader>
 
             <form onSubmit={handleSubmit}>
@@ -176,36 +176,36 @@ const CreateMachine = () => {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name" className={errors.name ? "text-red-500" : ""}>
-                      Machine Name <span className="text-red-500">*</span>
+                      Nombre de la Máquina <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="name"
                       name="name"
                       value={machine.name}
                       onChange={handleChange}
-                      placeholder="Enter machine name"
+                      placeholder="Ingresa el nombre de la máquina"
                       className={errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}
                     />
                     {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">Descripción</Label>
                     <Textarea
                       id="description"
                       name="description"
                       value={machine.description}
                       onChange={handleChange}
-                      placeholder="Enter machine description"
+                      placeholder="Ingresa la descripción de la máquina"
                       rows={4}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Provide details about the machine's purpose, location, or other relevant information.
+                      Proporciona detalles sobre el propósito de la máquina, ubicación u otra información relevante.
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="factory">Factory (Optional)</Label>
+                    <Label htmlFor="factory">Fábrica (Opcional)</Label>
                     <Select
                       value={machine.factory}
                       onValueChange={(value) => handleSelectChange("factory", value)}
@@ -213,11 +213,11 @@ const CreateMachine = () => {
                     >
                       <SelectTrigger id="factory" className="w-full">
                         <SelectValue
-                          placeholder={loadingFactories ? "Loading factories..." : "Select a factory (optional)"}
+                          placeholder={loadingFactories ? "Cargando fábricas..." : "Selecciona una fábrica (opcional)"}
                         />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">No Factory</SelectItem>
+                        <SelectItem value="none">Sin Fábrica</SelectItem>
                         {Array.isArray(factories) &&
                           factories.map((factory) => (
                             <SelectItem key={factory._id} value={factory._id}>
@@ -230,20 +230,20 @@ const CreateMachine = () => {
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      Assign this machine to a factory for better organization.
+                      Asigna esta máquina a una fábrica para una mejor organización.
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
+                    <Label htmlFor="status">Estado</Label>
                     <Select value={machine.status} onValueChange={(value) => handleSelectChange("status", value)}>
                       <SelectTrigger id="status" className="w-full">
-                        <SelectValue placeholder="Select status" />
+                        <SelectValue placeholder="Selecciona el estado" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        <SelectItem value="active">Activa</SelectItem>
+                        <SelectItem value="inactive">Inactiva</SelectItem>
+                        <SelectItem value="maintenance">Mantenimiento</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -252,13 +252,13 @@ const CreateMachine = () => {
                 <Separator />
 
                 <div className="p-4 border rounded-md bg-muted/30">
-                  <h3 className="mb-2 font-medium">Machine Preview</h3>
+                  <h3 className="mb-2 font-medium">Vista Previa de la Máquina</h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">{machine.name || "Machine Name"}</p>
+                        <p className="font-medium">{machine.name || "Nombre de la Máquina"}</p>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          {machine.description || "Machine description will appear here"}
+                          {machine.description || "La descripción de la máquina aparecerá aquí"}
                         </p>
                       </div>
                       {getStatusBadge(machine.status)}
@@ -266,7 +266,7 @@ const CreateMachine = () => {
                     {machine.factory && machine.factory !== "none" && getSelectedFactory() && (
                       <div className="flex items-center gap-2 p-2 border rounded-md bg-blue-50 dark:bg-blue-900/20">
                         <Building2 className="w-4 h-4 text-blue-500" />
-                        <span className="text-sm font-medium">Factory: {getSelectedFactory().name}</span>
+                        <span className="text-sm font-medium">Fábrica: {getSelectedFactory().name}</span>
                       </div>
                     )}
                   </div>
@@ -283,18 +283,18 @@ const CreateMachine = () => {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Creating...
+                        Creando...
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4 mr-2" />
-                        Create Machine
+                        Crear Máquina
                       </>
                     )}
                   </Button>
                 </motion.div>
                 <p className="pt-2 text-xs text-center text-muted-foreground">
-                  Fields marked with <span className="text-red-500">*</span> are required
+                  Los campos marcados con <span className="text-red-500">*</span> son obligatorios
                 </p>
               </CardFooter>
             </form>

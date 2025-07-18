@@ -39,12 +39,12 @@ const EditCategory = () => {
       setName(category.name)
       setOriginalName(category.name)
     } catch (error) {
-      console.error("Failed to fetch category:", error)
-      setError("Failed to fetch category details")
+      console.error("Error al obtener la categoría:", error)
+      setError("Error al obtener los detalles de la categoría")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch category details. Redirecting to categories list.",
+        description: "Error al obtener los detalles de la categoría. Redirigiendo a la lista de categorías.",
       })
       setTimeout(() => navigate("/categories"), 2000)
     } finally {
@@ -54,12 +54,12 @@ const EditCategory = () => {
 
   const validateForm = () => {
     if (!name.trim()) {
-      setNameError("Category name is required")
+      setNameError("El nombre de la categoría es obligatorio")
       return false
     }
 
     if (name.trim().length < 2) {
-      setNameError("Category name must be at least 2 characters")
+      setNameError("El nombre de la categoría debe tener al menos 2 caracteres")
       return false
     }
 
@@ -78,16 +78,17 @@ const EditCategory = () => {
     try {
       await updateCategory(id, { name })
       toast({
-        title: "Success",
-        description: "Category updated successfully!",
+        title: "Éxito",
+        description: "¡Categoría actualizada exitosamente!",
       })
       setTimeout(() => navigate("/categories"), 1000)
     } catch (error) {
-      console.error("Failed to update category:", error)
+      console.error("Error al actualizar la categoría:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.response?.data?.message || "Failed to update category. Please try again.",
+        description:
+          error.response?.data?.message || "Error al actualizar la categoría. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setIsSubmitting(false)
@@ -105,8 +106,8 @@ const EditCategory = () => {
         <div className="max-w-md mx-auto">
           <Card className="shadow-lg border-zinc-200 dark:border-zinc-700">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Edit Category</CardTitle>
-              <CardDescription>Update category information</CardDescription>
+              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Editar Categoría</CardTitle>
+              <CardDescription>Actualizar información de la categoría</CardDescription>
             </CardHeader>
 
             {loading ? (
@@ -129,7 +130,7 @@ const EditCategory = () => {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name" className={nameError ? "text-red-500" : ""}>
-                      Category Name <span className="text-red-500">*</span>
+                      Nombre de la Categoría <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative">
                       <Tag
@@ -144,7 +145,7 @@ const EditCategory = () => {
                           if (nameError) setNameError("")
                         }}
                         className={`w-full pl-10 ${nameError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                        placeholder="Enter category name"
+                        placeholder="Ingresa el nombre de la categoría"
                       />
                     </div>
                     {nameError && <p className="mt-1 text-sm text-red-500">{nameError}</p>}
@@ -152,7 +153,7 @@ const EditCategory = () => {
 
                   {hasChanges() && (
                     <div className="flex items-center p-3 border border-blue-200 rounded-md bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
-                      <div className="flex-1 text-sm text-blue-700 dark:text-blue-300">You have unsaved changes</div>
+                      <div className="flex-1 text-sm text-blue-700 dark:text-blue-300">Tienes cambios sin guardar</div>
                     </div>
                   )}
                 </CardContent>
@@ -160,7 +161,7 @@ const EditCategory = () => {
                 <CardFooter className="flex justify-between">
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button type="button" variant="outline" onClick={() => navigate("/categories")}>
-                      Cancel
+                      Cancelar
                     </Button>
                   </motion.div>
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -172,12 +173,12 @@ const EditCategory = () => {
                       {isSubmitting ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Updating...
+                          Actualizando...
                         </>
                       ) : (
                         <>
                           <Save className="w-4 h-4 mr-2" />
-                          Update Category
+                          Actualizar Categoría
                         </>
                       )}
                     </Button>

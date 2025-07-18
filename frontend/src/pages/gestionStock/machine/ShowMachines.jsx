@@ -67,12 +67,12 @@ const ShowMachines = () => {
       const factoriesArray = Array.isArray(data) ? data : data?.data ? data.data : []
       setFactories(factoriesArray)
     } catch (error) {
-      console.error("Failed to fetch factories:", error)
+      console.error("Error al obtener las fábricas:", error)
       setFactories([])
       toast({
         variant: "destructive",
-        title: "Warning",
-        description: "Failed to load factories. Factory filtering may not work properly.",
+        title: "Advertencia",
+        description: "Error al cargar las fábricas. El filtrado por fábrica puede no funcionar correctamente.",
       })
     } finally {
       setLoadingFactories(false)
@@ -91,12 +91,12 @@ const ShowMachines = () => {
       const data = await getAllMachines(1, 100, searchTerm, filters)
       setMachines(data?.data || [])
     } catch (error) {
-      console.error("Failed to fetch machines:", error)
-      setError("Failed to fetch machines. Please try again.")
+      console.error("Error al obtener las máquinas:", error)
+      setError("Error al obtener las máquinas. Por favor, inténtalo de nuevo.")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch machines. Please try again.",
+        description: "Error al obtener las máquinas. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setLoading(false)
@@ -115,15 +115,15 @@ const ShowMachines = () => {
       await deleteMachine(machineToDelete._id)
       setMachines(machines.filter((machine) => machine._id !== machineToDelete._id))
       toast({
-        title: "Success",
-        description: "Machine deleted successfully!",
+        title: "Éxito",
+        description: "¡Máquina eliminada exitosamente!",
       })
     } catch (error) {
-      console.error("Failed to delete machine:", error)
+      console.error("Error al eliminar la máquina:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete machine. Please try again.",
+        description: "Error al eliminar la máquina. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setDeleteDialogOpen(false)
@@ -137,21 +137,21 @@ const ShowMachines = () => {
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-green-700 border-green-200 bg-green-50">
             <CheckCircle className="w-3 h-3" />
-            Active
+            Activa
           </Badge>
         )
       case "inactive":
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-red-700 border-red-200 bg-red-50">
             <PowerOff className="w-3 h-3" />
-            Inactive
+            Inactiva
           </Badge>
         )
       case "maintenance":
         return (
           <Badge variant="outline" className="flex items-center gap-1 bg-amber-50 text-amber-700 border-amber-200">
             <Wrench className="w-3 h-3" />
-            Maintenance
+            Mantenimiento
           </Badge>
         )
       default:
@@ -177,9 +177,9 @@ const ShowMachines = () => {
   }
 
   const getSelectedFactoryName = () => {
-    if (selectedFactory === "all") return "All Factories"
+    if (selectedFactory === "all") return "Todas las Fábricas"
     const factory = factories.find((f) => f._id === selectedFactory)
-    return factory ? factory.name : "Unknown Factory"
+    return factory ? factory.name : "Fábrica Desconocida"
   }
 
   const renderSkeletons = () => {
@@ -236,7 +236,7 @@ const ShowMachines = () => {
                 </CardHeader>
                 <CardContent className="flex-grow py-2">
                   <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-300">
-                    {machine.description || "No description provided"}
+                    {machine.description || "Sin descripción proporcionada"}
                   </p>
                   {getStatusBadge(machine.status)}
                 </CardContent>
@@ -248,7 +248,7 @@ const ShowMachines = () => {
                       className="text-blue-600 bg-transparent hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                     >
                       <Edit className="w-4 h-4 mr-2" />
-                      Edit
+                      Editar
                     </Button>
                   </Link>
                   <Button
@@ -258,7 +258,7 @@ const ShowMachines = () => {
                     onClick={() => handleDeleteClick(machine)}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
+                    Eliminar
                   </Button>
                 </CardFooter>
               </Card>
@@ -281,23 +281,23 @@ const ShowMachines = () => {
           <CardHeader className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
             <div>
               <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                Machines - {getSelectedFactoryName()}
+                Máquinas - {getSelectedFactoryName()}
               </CardTitle>
               <CardDescription>
                 {selectedFactory === "all"
-                  ? "Manage all machines across factories"
-                  : `Manage machines in ${getSelectedFactoryName()}`}
+                  ? "Gestiona todas las máquinas en todas las fábricas"
+                  : `Gestiona las máquinas en ${getSelectedFactoryName()}`}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={fetchMachines} className="bg-transparent h-9">
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh
+                Actualizar
               </Button>
               <Link to="/machines/create">
                 <Button className="text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 h-9">
                   <Plus className="w-4 h-4 mr-2" />
-                  Add New Machine
+                  Agregar Nueva Máquina
                 </Button>
               </Link>
             </div>
@@ -309,17 +309,17 @@ const ShowMachines = () => {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium text-blue-900 dark:text-blue-100">Select Factory:</span>
+                  <span className="font-medium text-blue-900 dark:text-blue-100">Seleccionar Fábrica:</span>
                 </div>
                 <Select value={selectedFactory} onValueChange={setSelectedFactory} disabled={loadingFactories}>
                   <SelectTrigger className="w-64 bg-white dark:bg-zinc-800">
-                    <SelectValue placeholder={loadingFactories ? "Loading..." : "Select factory"} />
+                    <SelectValue placeholder={loadingFactories ? "Cargando..." : "Seleccionar fábrica"} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">
                       <div className="flex items-center gap-2">
                         <Filter className="w-4 h-4" />
-                        All Factories
+                        Todas las Fábricas
                       </div>
                     </SelectItem>
                     {factories.map((factory) => (
@@ -340,23 +340,23 @@ const ShowMachines = () => {
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search machines..."
+                  placeholder="Buscar máquinas..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9"
                 />
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Status:</span>
+                <span className="text-sm font-medium">Estado:</span>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="active">Activa</SelectItem>
+                    <SelectItem value="inactive">Inactiva</SelectItem>
+                    <SelectItem value="maintenance">Mantenimiento</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -367,7 +367,7 @@ const ShowMachines = () => {
               <Card className="border-green-100 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
                 <CardContent className="flex items-center justify-between p-4">
                   <div>
-                    <p className="text-sm font-medium text-green-800 dark:text-green-300">Active</p>
+                    <p className="text-sm font-medium text-green-800 dark:text-green-300">Activas</p>
                     <p className="text-2xl font-bold text-green-900 dark:text-green-200">
                       {machines.filter((m) => m.status === "active").length}
                     </p>
@@ -379,7 +379,7 @@ const ShowMachines = () => {
               <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800">
                 <CardContent className="flex items-center justify-between p-4">
                   <div>
-                    <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Maintenance</p>
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Mantenimiento</p>
                     <p className="text-2xl font-bold text-amber-900 dark:text-amber-200">
                       {machines.filter((m) => m.status === "maintenance").length}
                     </p>
@@ -391,7 +391,7 @@ const ShowMachines = () => {
               <Card className="border-red-100 bg-red-50 dark:bg-red-900/20 dark:border-red-800">
                 <CardContent className="flex items-center justify-between p-4">
                   <div>
-                    <p className="text-sm font-medium text-red-800 dark:text-red-300">Inactive</p>
+                    <p className="text-sm font-medium text-red-800 dark:text-red-300">Inactivas</p>
                     <p className="text-2xl font-bold text-red-900 dark:text-red-200">
                       {machines.filter((m) => m.status === "inactive").length}
                     </p>
@@ -418,16 +418,16 @@ const ShowMachines = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-zinc-100 dark:bg-zinc-800">
                   <Settings className="w-8 h-8 text-zinc-500" />
                 </div>
-                <h3 className="mb-2 text-lg font-medium">No machines found</h3>
+                <h3 className="mb-2 text-lg font-medium">No se encontraron máquinas</h3>
                 <p className="mb-4 text-muted-foreground">
                   {searchTerm || selectedFactory !== "all"
-                    ? "Try adjusting your search or filters"
-                    : "Get started by adding your first machine"}
+                    ? "Intenta ajustar tu búsqueda o filtros"
+                    : "Comienza agregando tu primera máquina"}
                 </p>
                 <Link to="/machines/create">
                   <Button>
                     <Plus className="w-4 h-4 mr-2" />
-                    Add New Machine
+                    Agregar Nueva Máquina
                   </Button>
                 </Link>
               </div>
@@ -441,18 +441,19 @@ const ShowMachines = () => {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogTitle>Confirmar Eliminación</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete the machine "{machineToDelete?.name}"? This action cannot be undone.
+                ¿Estás seguro de que quieres eliminar la máquina "{machineToDelete?.name}"? Esta acción no se puede
+                deshacer.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                Cancel
+                Cancelar
               </Button>
               <Button variant="destructive" onClick={handleDelete}>
                 <Trash2 className="w-4 h-4 mr-2" />
-                Delete
+                Eliminar
               </Button>
             </DialogFooter>
           </DialogContent>

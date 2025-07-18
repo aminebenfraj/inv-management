@@ -39,12 +39,12 @@ const EditLocation = () => {
       setLocation(data.location)
       setOriginalLocation(data.location)
     } catch (error) {
-      console.error("Failed to fetch location:", error)
-      setError("Failed to fetch location details")
+      console.error("Error al obtener la ubicación:", error)
+      setError("Error al obtener los detalles de la ubicación")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch location details. Redirecting to locations list.",
+        description: "Error al obtener los detalles de la ubicación. Redirigiendo a la lista de ubicaciones.",
       })
       setTimeout(() => navigate("/locations"), 2000)
     } finally {
@@ -54,12 +54,12 @@ const EditLocation = () => {
 
   const validateForm = () => {
     if (!location.trim()) {
-      setLocationError("Location name is required")
+      setLocationError("El nombre de la ubicación es obligatorio")
       return false
     }
 
     if (location.trim().length < 2) {
-      setLocationError("Location name must be at least 2 characters")
+      setLocationError("El nombre de la ubicación debe tener al menos 2 caracteres")
       return false
     }
 
@@ -78,16 +78,17 @@ const EditLocation = () => {
     try {
       await updateLocation(id, { location })
       toast({
-        title: "Success",
-        description: "Location updated successfully!",
+        title: "Éxito",
+        description: "¡Ubicación actualizada exitosamente!",
       })
       setTimeout(() => navigate("/locations"), 1000)
     } catch (error) {
-      console.error("Failed to update location:", error)
+      console.error("Error al actualizar la ubicación:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.response?.data?.message || "Failed to update location. Please try again.",
+        description:
+          error.response?.data?.message || "Error al actualizar la ubicación. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setIsSubmitting(false)
@@ -105,8 +106,8 @@ const EditLocation = () => {
         <div className="max-w-md mx-auto">
           <Card className="shadow-lg border-zinc-200 dark:border-zinc-700">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Edit Location</CardTitle>
-              <CardDescription>Update location information</CardDescription>
+              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Editar Ubicación</CardTitle>
+              <CardDescription>Actualizar información de la ubicación</CardDescription>
             </CardHeader>
 
             {loading ? (
@@ -129,7 +130,7 @@ const EditLocation = () => {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="location" className={locationError ? "text-red-500" : ""}>
-                      Location Name <span className="text-red-500">*</span>
+                      Nombre de la Ubicación <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative">
                       <MapPin
@@ -144,7 +145,7 @@ const EditLocation = () => {
                           if (locationError) setLocationError("")
                         }}
                         className={`w-full pl-10 ${locationError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                        placeholder="Enter location name"
+                        placeholder="Ingresa el nombre de la ubicación"
                       />
                     </div>
                     {locationError && <p className="mt-1 text-sm text-red-500">{locationError}</p>}
@@ -152,7 +153,7 @@ const EditLocation = () => {
 
                   {hasChanges() && (
                     <div className="flex items-center p-3 border border-blue-200 rounded-md bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
-                      <div className="flex-1 text-sm text-blue-700 dark:text-blue-300">You have unsaved changes</div>
+                      <div className="flex-1 text-sm text-blue-700 dark:text-blue-300">Tienes cambios sin guardar</div>
                     </div>
                   )}
                 </CardContent>
@@ -160,7 +161,7 @@ const EditLocation = () => {
                 <CardFooter className="flex justify-between">
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button type="button" variant="outline" onClick={() => navigate("/locations")}>
-                      Cancel
+                      Cancelar
                     </Button>
                   </motion.div>
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -172,12 +173,12 @@ const EditLocation = () => {
                       {isSubmitting ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Updating...
+                          Actualizando...
                         </>
                       ) : (
                         <>
                           <Save className="w-4 h-4 mr-2" />
-                          Update Location
+                          Actualizar Ubicación
                         </>
                       )}
                     </Button>

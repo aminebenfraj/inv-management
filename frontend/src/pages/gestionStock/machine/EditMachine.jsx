@@ -54,11 +54,11 @@ const EditMachine = () => {
       const factoriesArray = Array.isArray(data) ? data : data?.data ? data.data : []
       setFactories(factoriesArray)
     } catch (error) {
-      console.error("Failed to fetch factories:", error)
+      console.error("Error al obtener las fábricas:", error)
       setFactories([])
       toast({
-        title: "Warning",
-        description: "Failed to load factories. Factory assignment may not work properly.",
+        title: "Advertencia",
+        description: "Error al cargar las fábricas. La asignación de fábrica puede no funcionar correctamente.",
         variant: "destructive",
       })
     } finally {
@@ -80,12 +80,12 @@ const EditMachine = () => {
       setMachine(machineData)
       setOriginalMachine(data)
     } catch (error) {
-      console.error("Failed to fetch machine:", error)
-      setError("Failed to fetch machine details")
+      console.error("Error al obtener la máquina:", error)
+      setError("Error al obtener los detalles de la máquina")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch machine details. Redirecting to machines list.",
+        description: "Error al obtener los detalles de la máquina. Redirigiendo a la lista de máquinas.",
       })
       setTimeout(() => navigate("/machines"), 2000)
     } finally {
@@ -110,9 +110,9 @@ const EditMachine = () => {
     const newErrors = {}
 
     if (!machine.name.trim()) {
-      newErrors.name = "Machine name is required"
+      newErrors.name = "El nombre de la máquina es obligatorio"
     } else if (machine.name.length < 3) {
-      newErrors.name = "Machine name must be at least 3 characters"
+      newErrors.name = "El nombre de la máquina debe tener al menos 3 caracteres"
     }
 
     setErrors(newErrors)
@@ -140,16 +140,16 @@ const EditMachine = () => {
 
       await updateMachine(id, updateData)
       toast({
-        title: "Success",
-        description: "Machine updated successfully!",
+        title: "Éxito",
+        description: "¡Máquina actualizada exitosamente!",
         variant: "default",
       })
       setTimeout(() => navigate("/machines"), 1500)
     } catch (error) {
-      console.error("Failed to update machine:", error)
+      console.error("Error al actualizar la máquina:", error)
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to update machine. Please try again.",
+        description: error.response?.data?.message || "Error al actualizar la máquina. Por favor, inténtalo de nuevo.",
         variant: "destructive",
       })
     } finally {
@@ -185,21 +185,21 @@ const EditMachine = () => {
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-green-700 border-green-200 bg-green-50">
             <CheckCircle className="w-3 h-3" />
-            Active
+            Activa
           </Badge>
         )
       case "inactive":
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-red-700 border-red-200 bg-red-50">
             <PowerOff className="w-3 h-3" />
-            Inactive
+            Inactiva
           </Badge>
         )
       case "maintenance":
         return (
           <Badge variant="outline" className="flex items-center gap-1 bg-amber-50 text-amber-700 border-amber-200">
             <Wrench className="w-3 h-3" />
-            Maintenance
+            Mantenimiento
           </Badge>
         )
       default:
@@ -218,14 +218,14 @@ const EditMachine = () => {
           <div className="flex items-center mb-6">
             <Button variant="ghost" onClick={() => navigate("/machines")} className="mr-auto">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Machines
+              Volver a Máquinas
             </Button>
           </div>
 
           <Card className="shadow-lg border-zinc-200 dark:border-zinc-700">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Edit Machine</CardTitle>
-              <CardDescription>Update machine information</CardDescription>
+              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Editar Máquina</CardTitle>
+              <CardDescription>Actualizar información de la máquina</CardDescription>
             </CardHeader>
 
             {loading ? (
@@ -263,36 +263,36 @@ const EditMachine = () => {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="name" className={errors.name ? "text-red-500" : ""}>
-                        Machine Name <span className="text-red-500">*</span>
+                        Nombre de la Máquina <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="name"
                         name="name"
                         value={machine.name}
                         onChange={handleChange}
-                        placeholder="Enter machine name"
+                        placeholder="Ingresa el nombre de la máquina"
                         className={errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}
                       />
                       {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
+                      <Label htmlFor="description">Descripción</Label>
                       <Textarea
                         id="description"
                         name="description"
                         value={machine.description}
                         onChange={handleChange}
-                        placeholder="Enter machine description"
+                        placeholder="Ingresa la descripción de la máquina"
                         rows={4}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Provide details about the machine's purpose, location, or other relevant information.
+                        Proporciona detalles sobre el propósito de la máquina, ubicación u otra información relevante.
                       </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="factory">Factory</Label>
+                      <Label htmlFor="factory">Fábrica</Label>
                       <Select
                         value={machine.factory}
                         onValueChange={(value) => handleSelectChange("factory", value)}
@@ -300,11 +300,13 @@ const EditMachine = () => {
                       >
                         <SelectTrigger id="factory" className="w-full">
                           <SelectValue
-                            placeholder={loadingFactories ? "Loading factories..." : "Select a factory (optional)"}
+                            placeholder={
+                              loadingFactories ? "Cargando fábricas..." : "Selecciona una fábrica (opcional)"
+                            }
                           />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">No Factory</SelectItem>
+                          <SelectItem value="none">Sin Fábrica</SelectItem>
                           {Array.isArray(factories) &&
                             factories.map((factory) => (
                               <SelectItem key={factory._id} value={factory._id}>
@@ -317,20 +319,20 @@ const EditMachine = () => {
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">
-                        Assign this machine to a factory for better organization.
+                        Asigna esta máquina a una fábrica para una mejor organización.
                       </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="status">Status</Label>
+                      <Label htmlFor="status">Estado</Label>
                       <Select value={machine.status} onValueChange={(value) => handleSelectChange("status", value)}>
                         <SelectTrigger id="status" className="w-full">
-                          <SelectValue placeholder="Select status" />
+                          <SelectValue placeholder="Selecciona el estado" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="active">Activa</SelectItem>
+                          <SelectItem value="inactive">Inactiva</SelectItem>
+                          <SelectItem value="maintenance">Mantenimiento</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -339,13 +341,13 @@ const EditMachine = () => {
                   <Separator />
 
                   <div className="p-4 border rounded-md bg-muted/30">
-                    <h3 className="mb-2 font-medium">Machine Preview</h3>
+                    <h3 className="mb-2 font-medium">Vista Previa de la Máquina</h3>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">{machine.name || "Machine Name"}</p>
+                          <p className="font-medium">{machine.name || "Nombre de la Máquina"}</p>
                           <p className="mt-1 text-sm text-muted-foreground">
-                            {machine.description || "No description provided"}
+                            {machine.description || "Sin descripción proporcionada"}
                           </p>
                         </div>
                         {getStatusBadge(machine.status)}
@@ -353,13 +355,13 @@ const EditMachine = () => {
                       {machine.factory && machine.factory !== "none" && getSelectedFactory() && (
                         <div className="flex items-center gap-2 p-2 border rounded-md bg-blue-50 dark:bg-blue-900/20">
                           <Building2 className="w-4 h-4 text-blue-500" />
-                          <span className="text-sm font-medium">Factory: {getSelectedFactory().name}</span>
+                          <span className="text-sm font-medium">Fábrica: {getSelectedFactory().name}</span>
                         </div>
                       )}
                       {originalMachine?.factory && machine.factory === "none" && (
                         <div className="flex items-center gap-2 p-2 border rounded-md bg-amber-50 dark:bg-amber-900/20">
                           <AlertCircle className="w-4 h-4 text-amber-500" />
-                          <span className="text-sm">This machine will be removed from its current factory</span>
+                          <span className="text-sm">Esta máquina será removida de su fábrica actual</span>
                         </div>
                       )}
                     </div>
@@ -367,9 +369,9 @@ const EditMachine = () => {
 
                   {hasChanges() && (
                     <div className="flex items-center p-3 border border-blue-200 rounded-md bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
-                      <div className="flex-1 text-sm text-blue-700 dark:text-blue-300">You have unsaved changes</div>
+                      <div className="flex-1 text-sm text-blue-700 dark:text-blue-300">Tienes cambios sin guardar</div>
                       <Button type="button" variant="outline" size="sm" onClick={resetForm}>
-                        Reset
+                        Restablecer
                       </Button>
                     </div>
                   )}
@@ -379,7 +381,7 @@ const EditMachine = () => {
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button type="button" variant="outline" onClick={() => navigate("/machines")}>
                       <ArrowLeft className="w-4 h-4 mr-2" />
-                      Cancel
+                      Cancelar
                     </Button>
                   </motion.div>
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -391,12 +393,12 @@ const EditMachine = () => {
                       {isSubmitting ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Updating...
+                          Actualizando...
                         </>
                       ) : (
                         <>
                           <Save className="w-4 h-4 mr-2" />
-                          Update Machine
+                          Actualizar Máquina
                         </>
                       )}
                     </Button>

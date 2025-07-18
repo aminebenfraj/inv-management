@@ -43,12 +43,12 @@ const ShowLocations = () => {
       const data = await getAllLocations()
       setLocations(data)
     } catch (error) {
-      console.error("Failed to fetch locations:", error)
-      setError("Failed to fetch locations. Please try again.")
+      console.error("Error al obtener las ubicaciones:", error)
+      setError("Error al obtener las ubicaciones. Por favor, inténtalo de nuevo.")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch locations. Please try again.",
+        description: "Error al obtener las ubicaciones. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setLoading(false)
@@ -68,15 +68,15 @@ const ShowLocations = () => {
       await deleteLocation(locationToDelete._id)
       setLocations(locations.filter((loc) => loc._id !== locationToDelete._id))
       toast({
-        title: "Success",
-        description: "Location deleted successfully!",
+        title: "Éxito",
+        description: "¡Ubicación eliminada exitosamente!",
       })
     } catch (error) {
-      console.error("Failed to delete location:", error)
+      console.error("Error al eliminar la ubicación:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete location. Please try again.",
+        description: "Error al eliminar la ubicación. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setIsDeleting(false)
@@ -113,13 +113,13 @@ const ShowLocations = () => {
         <Card className="bg-white shadow-lg dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
           <CardHeader className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
             <div>
-              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Locations</CardTitle>
-              <CardDescription>Manage your inventory locations</CardDescription>
+              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Ubicaciones</CardTitle>
+              <CardDescription>Gestiona las ubicaciones de tu inventario</CardDescription>
             </div>
             <Link to="/locations/create">
               <Button className="text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100">
                 <Plus className="w-4 h-4 mr-2" />
-                Add New Location
+                Agregar Nueva Ubicación
               </Button>
             </Link>
           </CardHeader>
@@ -127,7 +127,7 @@ const ShowLocations = () => {
             <div className="relative max-w-md">
               <Search className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search locations..."
+                placeholder="Buscar ubicaciones..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -156,15 +156,15 @@ const ShowLocations = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-zinc-100 dark:bg-zinc-800">
                   <MapPin className="w-8 h-8 text-zinc-500" />
                 </div>
-                <h3 className="mb-2 text-lg font-medium">No locations found</h3>
+                <h3 className="mb-2 text-lg font-medium">No se encontraron ubicaciones</h3>
                 <p className="mb-4 text-muted-foreground">
-                  {searchTerm ? "Try adjusting your search" : "Get started by adding your first location"}
+                  {searchTerm ? "Intenta ajustar tu búsqueda" : "Comienza agregando tu primera ubicación"}
                 </p>
                 {!searchTerm && (
                   <Link to="/locations/create">
                     <Button>
                       <Plus className="w-4 h-4 mr-2" />
-                      Add New Location
+                      Agregar Nueva Ubicación
                     </Button>
                   </Link>
                 )}
@@ -193,19 +193,19 @@ const ShowLocations = () => {
                           <Link to={`/locations/edit/${loc._id}`}>
                             <Button
                               variant="outline"
-                              className="text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                              className="text-blue-600 bg-transparent hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                             >
                               <Edit className="w-4 h-4 mr-2" />
-                              Edit
+                              Editar
                             </Button>
                           </Link>
                           <Button
                             variant="outline"
-                            className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                            className="text-red-600 bg-transparent hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                             onClick={() => handleDeleteClick(loc)}
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
+                            Eliminar
                           </Button>
                         </div>
                       </CardContent>
@@ -221,26 +221,26 @@ const ShowLocations = () => {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogTitle>Confirmar Eliminación</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete the location "{locationToDelete?.location}"? This action cannot be
-                undone.
+                ¿Estás seguro de que quieres eliminar la ubicación "{locationToDelete?.location}"? Esta acción no se
+                puede deshacer.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>
-                Cancel
+                Cancelar
               </Button>
               <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
                 {isDeleting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Deleting...
+                    Eliminando...
                   </>
                 ) : (
                   <>
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
+                    Eliminar
                   </>
                 )}
               </Button>

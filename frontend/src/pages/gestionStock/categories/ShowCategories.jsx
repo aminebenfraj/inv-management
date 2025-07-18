@@ -43,12 +43,12 @@ const ShowCategories = () => {
       const data = await getAllCategories()
       setCategories(data)
     } catch (error) {
-      console.error("Failed to fetch categories:", error)
-      setError("Failed to fetch categories. Please try again.")
+      console.error("Error al obtener las categorías:", error)
+      setError("Error al obtener las categorías. Por favor, inténtalo de nuevo.")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch categories. Please try again.",
+        description: "Error al obtener las categorías. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setLoading(false)
@@ -68,15 +68,15 @@ const ShowCategories = () => {
       await deleteCategory(categoryToDelete._id)
       setCategories(categories.filter((category) => category._id !== categoryToDelete._id))
       toast({
-        title: "Success",
-        description: "Category deleted successfully!",
+        title: "Éxito",
+        description: "¡Categoría eliminada exitosamente!",
       })
     } catch (error) {
-      console.error("Failed to delete category:", error)
+      console.error("Error al eliminar la categoría:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete category. Please try again.",
+        description: "Error al eliminar la categoría. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setIsDeleting(false)
@@ -115,13 +115,13 @@ const ShowCategories = () => {
         <Card className="bg-white shadow-lg dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700">
           <CardHeader className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
             <div>
-              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Categories</CardTitle>
-              <CardDescription>Manage your item categories</CardDescription>
+              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Categorías</CardTitle>
+              <CardDescription>Gestiona las categorías de tus artículos</CardDescription>
             </div>
             <Link to="/categories/create">
               <Button className="text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100">
                 <Plus className="w-4 h-4 mr-2" />
-                Add New Category
+                Agregar Nueva Categoría
               </Button>
             </Link>
           </CardHeader>
@@ -129,7 +129,7 @@ const ShowCategories = () => {
             <div className="relative max-w-md">
               <Search className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search categories..."
+                placeholder="Buscar categorías..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -158,15 +158,15 @@ const ShowCategories = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-zinc-100 dark:bg-zinc-800">
                   <Tag className="w-8 h-8 text-zinc-500" />
                 </div>
-                <h3 className="mb-2 text-lg font-medium">No categories found</h3>
+                <h3 className="mb-2 text-lg font-medium">No se encontraron categorías</h3>
                 <p className="mb-4 text-muted-foreground">
-                  {searchTerm ? "Try adjusting your search" : "Get started by adding your first category"}
+                  {searchTerm ? "Intenta ajustar tu búsqueda" : "Comienza agregando tu primera categoría"}
                 </p>
                 {!searchTerm && (
                   <Link to="/categories/create">
                     <Button>
                       <Plus className="w-4 h-4 mr-2" />
-                      Add New Category
+                      Agregar Nueva Categoría
                     </Button>
                   </Link>
                 )}
@@ -195,19 +195,19 @@ const ShowCategories = () => {
                           <Link to={`/categories/edit/${category._id}`}>
                             <Button
                               variant="outline"
-                              className="text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                              className="text-blue-600 bg-transparent hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
                             >
                               <Edit className="w-4 h-4 mr-2" />
-                              Edit
+                              Editar
                             </Button>
                           </Link>
                           <Button
                             variant="outline"
-                            className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                            className="text-red-600 bg-transparent hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                             onClick={() => handleDeleteClick(category)}
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
+                            Eliminar
                           </Button>
                         </div>
                       </CardContent>
@@ -223,25 +223,26 @@ const ShowCategories = () => {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogTitle>Confirmar Eliminación</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete the category "{categoryToDelete?.name}"? This action cannot be undone.
+                ¿Estás seguro de que quieres eliminar la categoría "{categoryToDelete?.name}"? Esta acción no se puede
+                deshacer.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>
-                Cancel
+                Cancelar
               </Button>
               <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
                 {isDeleting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Deleting...
+                    Eliminando...
                   </>
                 ) : (
                   <>
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
+                    Eliminar
                   </>
                 )}
               </Button>
