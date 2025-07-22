@@ -39,41 +39,41 @@ import MainLayout from "@/components/MainLayout"
 const MaterialMachineCreate = () => {
   const { toast } = useToast()
 
-  // Data states
+  // Estados de datos
   const [materials, setMaterials] = useState([])
   const [machines, setMachines] = useState([])
   const [factories, setFactories] = useState([])
   const [filteredMaterials, setFilteredMaterials] = useState([])
   const [filteredMachines, setFilteredMachines] = useState([])
 
-  // Selection states
+  // Estados de selección
   const [selectedFactory, setSelectedFactory] = useState("")
   const [selectedMaterial, setSelectedMaterial] = useState("")
   const [materialDetails, setMaterialDetails] = useState(null)
 
-  // Filter states
+  // Estados de filtro
   const [materialSearch, setMaterialSearch] = useState("")
   const [machineSearch, setMachineSearch] = useState("")
   const [materialStockFilter, setMaterialStockFilter] = useState("all")
   const [machineStatusFilter, setMachineStatusFilter] = useState("all")
   const [criticalFilter, setCriticalFilter] = useState(false)
 
-  // Allocation states
+  // Estados de asignación
   const [allocations, setAllocations] = useState([{ machineId: "", allocatedStock: 0 }])
   const [totalAllocated, setTotalAllocated] = useState(0)
 
-  // Loading states
+  // Estados de carga
   const [loading, setLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
 
-  // Fetch initial data
+  // Obtener datos iniciales
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoadingData(true)
       try {
         await Promise.all([fetchFactories(), fetchAllMaterials(), fetchAllMachines()])
       } catch (error) {
-        console.error("Error fetching initial data:", error)
+        console.error("Error al obtener datos iniciales:", error)
       } finally {
         setLoadingData(false)
       }
@@ -82,17 +82,17 @@ const MaterialMachineCreate = () => {
     fetchInitialData()
   }, [])
 
-  // Filter materials when factory or filters change
+  // Filtrar materiales cuando cambie la fábrica o los filtros
   useEffect(() => {
     filterMaterials()
   }, [materials, selectedFactory, materialSearch, materialStockFilter, criticalFilter])
 
-  // Filter machines when factory or filters change
+  // Filtrar máquinas cuando cambie la fábrica o los filtros
   useEffect(() => {
     filterMachines()
   }, [machines, selectedFactory, machineSearch, machineStatusFilter])
 
-  // Fetch material details when selected
+  // Obtener detalles del material cuando se seleccione
   useEffect(() => {
     if (selectedMaterial) {
       fetchMaterialDetails(selectedMaterial)
@@ -101,7 +101,7 @@ const MaterialMachineCreate = () => {
     }
   }, [selectedMaterial])
 
-  // Calculate total allocated
+  // Calcular total asignado
   useEffect(() => {
     const total = allocations.reduce((sum, allocation) => {
       return sum + (Number.parseInt(allocation.allocatedStock, 10) || 0)
@@ -109,7 +109,7 @@ const MaterialMachineCreate = () => {
     setTotalAllocated(total)
   }, [allocations])
 
-  // Reset allocations when material or factory changes
+  // Reiniciar asignaciones cuando cambie el material o la fábrica
   useEffect(() => {
     setAllocations([{ machineId: "", allocatedStock: 0 }])
   }, [selectedMaterial, selectedFactory])
@@ -120,10 +120,10 @@ const MaterialMachineCreate = () => {
       const factoriesData = Array.isArray(response) ? response : response?.data || []
       setFactories(factoriesData)
     } catch (error) {
-      console.error("Error fetching factories:", error)
+      console.error("Error al obtener fábricas:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch factories",
+        description: "Error al obtener las fábricas",
         variant: "destructive",
       })
     }
@@ -131,14 +131,14 @@ const MaterialMachineCreate = () => {
 
   const fetchMaterials = async () => {
     try {
-      const response = await getAllMaterials(1, 100) // Changed from 1000 to 100
+      const response = await getAllMaterials(1, 100)
       const materialsData = response?.data || response || []
       setMaterials(Array.isArray(materialsData) ? materialsData : [])
     } catch (error) {
-      console.error("Error fetching materials:", error)
+      console.error("Error al obtener materiales:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch materials",
+        description: "Error al obtener los materiales",
         variant: "destructive",
       })
     }
@@ -146,14 +146,14 @@ const MaterialMachineCreate = () => {
 
   const fetchMachines = async () => {
     try {
-      const response = await getAllMachines(1, 100) // Changed from 1000 to 100
+      const response = await getAllMachines(1, 100)
       const machinesData = response?.data || response || []
       setMachines(Array.isArray(machinesData) ? machinesData : [])
     } catch (error) {
-      console.error("Error fetching machines:", error)
+      console.error("Error al obtener máquinas:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch machines",
+        description: "Error al obtener las máquinas",
         variant: "destructive",
       })
     }
@@ -173,7 +173,7 @@ const MaterialMachineCreate = () => {
           allMaterials = [...allMaterials, ...materialsData]
           page++
 
-          // Check if we got less than 100 records (last page)
+          // Verificar si obtuvimos menos de 100 registros (última página)
           if (materialsData.length < 100) {
             hasMore = false
           }
@@ -184,10 +184,10 @@ const MaterialMachineCreate = () => {
 
       setMaterials(allMaterials)
     } catch (error) {
-      console.error("Error fetching materials:", error)
+      console.error("Error al obtener materiales:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch materials",
+        description: "Error al obtener los materiales",
         variant: "destructive",
       })
     }
@@ -207,7 +207,7 @@ const MaterialMachineCreate = () => {
           allMachines = [...allMachines, ...machinesData]
           page++
 
-          // Check if we got less than 100 records (last page)
+          // Verificar si obtuvimos menos de 100 registros (última página)
           if (machinesData.length < 100) {
             hasMore = false
           }
@@ -218,10 +218,10 @@ const MaterialMachineCreate = () => {
 
       setMachines(allMachines)
     } catch (error) {
-      console.error("Error fetching machines:", error)
+      console.error("Error al obtener máquinas:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch machines",
+        description: "Error al obtener las máquinas",
         variant: "destructive",
       })
     }
@@ -232,10 +232,10 @@ const MaterialMachineCreate = () => {
       const data = await getMaterialById(materialId)
       setMaterialDetails(data)
     } catch (error) {
-      console.error("Error fetching material details:", error)
+      console.error("Error al obtener detalles del material:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch material details",
+        description: "Error al obtener los detalles del material",
         variant: "destructive",
       })
     }
@@ -244,12 +244,12 @@ const MaterialMachineCreate = () => {
   const filterMaterials = () => {
     let filtered = materials
 
-    // Filter by factory
+    // Filtrar por fábrica
     if (selectedFactory && selectedFactory !== "all") {
       filtered = filtered.filter((material) => material.factory?._id === selectedFactory)
     }
 
-    // Filter by search
+    // Filtrar por búsqueda
     if (materialSearch) {
       filtered = filtered.filter(
         (material) =>
@@ -259,7 +259,7 @@ const MaterialMachineCreate = () => {
       )
     }
 
-    // Filter by stock status
+    // Filtrar por estado de stock
     if (materialStockFilter !== "all") {
       filtered = filtered.filter((material) => {
         switch (materialStockFilter) {
@@ -275,7 +275,7 @@ const MaterialMachineCreate = () => {
       })
     }
 
-    // Filter by critical
+    // Filtrar por crítico
     if (criticalFilter) {
       filtered = filtered.filter((material) => material.critical)
     }
@@ -286,12 +286,12 @@ const MaterialMachineCreate = () => {
   const filterMachines = () => {
     let filtered = machines
 
-    // Filter by factory
+    // Filtrar por fábrica
     if (selectedFactory && selectedFactory !== "all") {
       filtered = filtered.filter((machine) => machine.factory?._id === selectedFactory)
     }
 
-    // Filter by search
+    // Filtrar por búsqueda
     if (machineSearch) {
       filtered = filtered.filter(
         (machine) =>
@@ -300,7 +300,7 @@ const MaterialMachineCreate = () => {
       )
     }
 
-    // Filter by status
+    // Filtrar por estado
     if (machineStatusFilter !== "all") {
       filtered = filtered.filter((machine) => machine.status === machineStatusFilter)
     }
@@ -313,7 +313,7 @@ const MaterialMachineCreate = () => {
       return (
         <Badge variant="destructive" className="flex items-center gap-1">
           <XCircle className="w-3 h-3" />
-          Out of Stock
+          Sin Stock
         </Badge>
       )
     }
@@ -321,14 +321,14 @@ const MaterialMachineCreate = () => {
       return (
         <Badge variant="secondary" className="flex items-center gap-1 bg-amber-100 text-amber-800">
           <AlertTriangle className="w-3 h-3" />
-          Low Stock
+          Stock Bajo
         </Badge>
       )
     }
     return (
       <Badge variant="outline" className="flex items-center gap-1 text-green-700 border-green-200 bg-green-50">
         <CheckCircle className="w-3 h-3" />
-        In Stock
+        En Stock
       </Badge>
     )
   }
@@ -339,21 +339,21 @@ const MaterialMachineCreate = () => {
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-green-700 border-green-200 bg-green-50">
             <CheckCircle className="w-3 h-3" />
-            Active
+            Activa
           </Badge>
         )
       case "maintenance":
         return (
           <Badge variant="secondary" className="flex items-center gap-1 bg-amber-100 text-amber-800">
             <Settings className="w-3 h-3" />
-            Maintenance
+            Mantenimiento
           </Badge>
         )
       case "inactive":
         return (
           <Badge variant="destructive" className="flex items-center gap-1">
             <XCircle className="w-3 h-3" />
-            Inactive
+            Inactiva
           </Badge>
         )
       default:
@@ -404,7 +404,7 @@ const MaterialMachineCreate = () => {
     if (!selectedFactory) {
       toast({
         title: "Error",
-        description: "Please select a factory",
+        description: "Por favor selecciona una fábrica",
         variant: "destructive",
       })
       return
@@ -413,7 +413,7 @@ const MaterialMachineCreate = () => {
     if (!selectedMaterial) {
       toast({
         title: "Error",
-        description: "Please select a material",
+        description: "Por favor selecciona un material",
         variant: "destructive",
       })
       return
@@ -426,7 +426,7 @@ const MaterialMachineCreate = () => {
     if (invalidAllocation) {
       toast({
         title: "Error",
-        description: "All allocations must have a machine selected and quantity greater than 0",
+        description: "Todas las asignaciones deben tener una máquina seleccionada y cantidad mayor a 0",
         variant: "destructive",
       })
       return
@@ -437,7 +437,7 @@ const MaterialMachineCreate = () => {
     if (hasDuplicates) {
       toast({
         title: "Error",
-        description: "Each machine can only appear once in allocations",
+        description: "Cada máquina solo puede aparecer una vez en las asignaciones",
         variant: "destructive",
       })
       return
@@ -446,7 +446,7 @@ const MaterialMachineCreate = () => {
     if (materialDetails && totalAllocated > materialDetails.currentStock) {
       toast({
         title: "Error",
-        description: `Total allocation (${totalAllocated}) exceeds available stock (${materialDetails.currentStock})`,
+        description: `La asignación total (${totalAllocated}) excede el stock disponible (${materialDetails.currentStock})`,
         variant: "destructive",
       })
       return
@@ -473,8 +473,8 @@ const MaterialMachineCreate = () => {
       const response = await allocateStock(requestPayload)
 
       toast({
-        title: "Success",
-        description: "Stock allocated successfully",
+        title: "Éxito",
+        description: "Stock asignado exitosamente",
       })
 
       if (response && response.updatedStock !== undefined) {
@@ -488,10 +488,10 @@ const MaterialMachineCreate = () => {
 
       setAllocations([{ machineId: "", allocatedStock: 0 }])
     } catch (error) {
-      console.error("Error allocating stock:", error)
+      console.error("Error al asignar stock:", error)
       toast({
         title: "Error",
-        description: error.response?.data?.error || error.message || "Failed to allocate stock",
+        description: error.response?.data?.error || error.message || "Error al asignar stock",
         variant: "destructive",
       })
     } finally {
@@ -500,9 +500,9 @@ const MaterialMachineCreate = () => {
   }
 
   const getSelectedFactoryName = () => {
-    if (!selectedFactory || selectedFactory === "all") return "All Factories"
+    if (!selectedFactory || selectedFactory === "all") return "Todas las Fábricas"
     const factory = factories.find((f) => f._id === selectedFactory)
-    return factory ? factory.name : "Unknown Factory"
+    return factory ? factory.name : "Fábrica Desconocida"
   }
 
   if (loadingData) {
@@ -511,7 +511,7 @@ const MaterialMachineCreate = () => {
         <div className="container py-8 mx-auto">
           <div className="flex items-center justify-center py-24">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <span className="ml-2 text-lg">Loading data...</span>
+            <span className="ml-2 text-lg">Cargando datos...</span>
           </div>
         </div>
       </MainLayout>
@@ -528,36 +528,36 @@ const MaterialMachineCreate = () => {
       >
         <Toaster />
 
-        {/* Header */}
+        {/* Encabezado */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Material Allocation System</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Sistema de Asignación de Materiales</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-300">
-            Allocate materials to machines within your selected factory
+            Asigna materiales a máquinas dentro de tu fábrica seleccionada
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {/* Left Column - Factory & Material Selection */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Factory Selection */}
+          {/* Columna Izquierda - Selección de Fábrica y Material */}
+          <div className="space-y-6 lg:col-span-2">
+            {/* Selección de Fábrica */}
             <Card className="border-2 border-blue-200 bg-blue-50/50 dark:bg-blue-900/10 dark:border-blue-800">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
                   <Factory className="w-5 h-5" />
-                  Step 1: Select Factory
+                  Paso 1: Seleccionar Fábrica
                 </CardTitle>
-                <CardDescription>Choose the factory where you want to allocate materials</CardDescription>
+                <CardDescription>Elige la fábrica donde quieres asignar materiales</CardDescription>
               </CardHeader>
               <CardContent>
                 <Select value={selectedFactory} onValueChange={handleFactoryChange}>
                   <SelectTrigger className="w-full bg-white dark:bg-gray-800">
-                    <SelectValue placeholder="Select a factory" />
+                    <SelectValue placeholder="Selecciona una fábrica" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4" />
-                        All Factories
+                        Todas las Fábricas
                       </div>
                     </SelectItem>
                     {factories.map((factory) => (
@@ -572,55 +572,55 @@ const MaterialMachineCreate = () => {
                 </Select>
 
                 {selectedFactory && (
-                  <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded-lg border">
+                  <div className="p-3 mt-3 bg-white border rounded-lg dark:bg-gray-800">
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      Selected Factory: <span className="text-blue-600">{getSelectedFactoryName()}</span>
+                      Fábrica Seleccionada: <span className="text-blue-600">{getSelectedFactoryName()}</span>
                     </p>
-                    <div className="mt-2 flex gap-4 text-xs text-gray-600 dark:text-gray-300">
-                      <span>Materials: {filteredMaterials.length}</span>
-                      <span>Machines: {filteredMachines.length}</span>
+                    <div className="flex gap-4 mt-2 text-xs text-gray-600 dark:text-gray-300">
+                      <span>Materiales: {filteredMaterials.length}</span>
+                      <span>Máquinas: {filteredMachines.length}</span>
                     </div>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Material Selection */}
+            {/* Selección de Material */}
             {selectedFactory && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                 <Card className="border-2 border-green-200 bg-green-50/50 dark:bg-green-900/10 dark:border-green-800">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-green-900 dark:text-green-100">
                       <Package className="w-5 h-5" />
-                      Step 2: Select Material
+                      Paso 2: Seleccionar Material
                     </CardTitle>
-                    <CardDescription>Choose the material you want to allocate to machines</CardDescription>
+                    <CardDescription>Elige el material que quieres asignar a las máquinas</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Tabs defaultValue="materials" className="w-full">
                       <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="materials">Materials</TabsTrigger>
-                        <TabsTrigger value="filters">Filters</TabsTrigger>
+                        <TabsTrigger value="materials">Materiales</TabsTrigger>
+                        <TabsTrigger value="filters">Filtros</TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="materials" className="space-y-4">
                         <div className="relative">
-                          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Search className="absolute w-4 h-4 text-gray-400 left-3 top-3" />
                           <Input
-                            placeholder="Search materials by reference, description, or manufacturer..."
+                            placeholder="Buscar materiales por referencia, descripción o fabricante..."
                             className="pl-10"
                             value={materialSearch}
                             onChange={(e) => setMaterialSearch(e.target.value)}
                           />
                         </div>
 
-                        <ScrollArea className="h-64 w-full rounded-md border p-4">
+                        <ScrollArea className="w-full h-64 p-4 border rounded-md">
                           <div className="space-y-2">
                             {filteredMaterials.length === 0 ? (
-                              <div className="text-center py-8 text-gray-500">
+                              <div className="py-8 text-center text-gray-500">
                                 <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                <p>No materials found</p>
-                                <p className="text-sm">Try adjusting your filters</p>
+                                <p>No se encontraron materiales</p>
+                                <p className="text-sm">Intenta ajustar tus filtros</p>
                               </div>
                             ) : (
                               filteredMaterials.map((material) => (
@@ -636,14 +636,14 @@ const MaterialMachineCreate = () => {
                                   <div className="flex items-start justify-between">
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-medium text-sm">{material.reference}</span>
+                                        <span className="text-sm font-medium">{material.reference}</span>
                                         {material.critical && (
                                           <Badge variant="destructive" className="text-xs">
-                                            Critical
+                                            Crítico
                                           </Badge>
                                         )}
                                       </div>
-                                      <p className="text-xs text-gray-600 dark:text-gray-300 mb-1">
+                                      <p className="mb-1 text-xs text-gray-600 dark:text-gray-300">
                                         {material.manufacturer}
                                       </p>
                                       <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
@@ -663,23 +663,23 @@ const MaterialMachineCreate = () => {
                       </TabsContent>
 
                       <TabsContent value="filters" className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                           <div>
-                            <Label htmlFor="stock-filter">Stock Status</Label>
+                            <Label htmlFor="stock-filter">Estado del Stock</Label>
                             <Select value={materialStockFilter} onValueChange={setMaterialStockFilter}>
                               <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="all">All Stock Levels</SelectItem>
-                                <SelectItem value="in_stock">In Stock</SelectItem>
-                                <SelectItem value="low_stock">Low Stock</SelectItem>
-                                <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                                <SelectItem value="all">Todos los Niveles de Stock</SelectItem>
+                                <SelectItem value="in_stock">En Stock</SelectItem>
+                                <SelectItem value="low_stock">Stock Bajo</SelectItem>
+                                <SelectItem value="out_of_stock">Sin Stock</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
 
-                          <div className="flex items-center space-x-2 pt-6">
+                          <div className="flex items-center pt-6 space-x-2">
                             <input
                               type="checkbox"
                               id="critical-filter"
@@ -688,7 +688,7 @@ const MaterialMachineCreate = () => {
                               className="rounded"
                             />
                             <Label htmlFor="critical-filter" className="text-sm">
-                              Show only critical materials
+                              Mostrar solo materiales críticos
                             </Label>
                           </div>
                         </div>
@@ -702,7 +702,7 @@ const MaterialMachineCreate = () => {
                           }}
                           className="w-full"
                         >
-                          Clear Filters
+                          Limpiar Filtros
                         </Button>
                       </TabsContent>
                     </Tabs>
@@ -711,26 +711,26 @@ const MaterialMachineCreate = () => {
               </motion.div>
             )}
 
-            {/* Machine Allocation */}
+            {/* Asignación de Máquinas */}
             {selectedMaterial && materialDetails && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                 <Card className="border-2 border-purple-200 bg-purple-50/50 dark:bg-purple-900/10 dark:border-purple-800">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-purple-900 dark:text-purple-100">
                       <Cog className="w-5 h-5" />
-                      Step 3: Allocate to Machines
+                      Paso 3: Asignar a Máquinas
                     </CardTitle>
-                    <CardDescription>Select machines and specify allocation quantities</CardDescription>
+                    <CardDescription>Selecciona máquinas y especifica las cantidades de asignación</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleSubmit}>
                       <div className="space-y-4">
-                        {/* Machine Search */}
+                        {/* Búsqueda de Máquinas */}
                         <div className="flex gap-4">
-                          <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <div className="relative flex-1">
+                            <Search className="absolute w-4 h-4 text-gray-400 left-3 top-3" />
                             <Input
-                              placeholder="Search machines..."
+                              placeholder="Buscar máquinas..."
                               className="pl-10"
                               value={machineSearch}
                               onChange={(e) => setMachineSearch(e.target.value)}
@@ -738,24 +738,24 @@ const MaterialMachineCreate = () => {
                           </div>
                           <Select value={machineStatusFilter} onValueChange={setMachineStatusFilter}>
                             <SelectTrigger className="w-40">
-                              <SelectValue placeholder="Status" />
+                              <SelectValue placeholder="Estado" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="all">All Status</SelectItem>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="maintenance">Maintenance</SelectItem>
-                              <SelectItem value="inactive">Inactive</SelectItem>
+                              <SelectItem value="all">Todos los Estados</SelectItem>
+                              <SelectItem value="active">Activa</SelectItem>
+                              <SelectItem value="maintenance">Mantenimiento</SelectItem>
+                              <SelectItem value="inactive">Inactiva</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
 
-                        {/* Allocations */}
+                        {/* Asignaciones */}
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <h4 className="font-medium">Machine Allocations</h4>
+                            <h4 className="font-medium">Asignaciones de Máquinas</h4>
                             <Button type="button" variant="outline" size="sm" onClick={addAllocation}>
                               <Plus className="w-4 h-4 mr-2" />
-                              Add Allocation
+                              Agregar Asignación
                             </Button>
                           </div>
 
@@ -768,13 +768,13 @@ const MaterialMachineCreate = () => {
                               className="grid grid-cols-[1fr_120px_40px] gap-3 items-end p-3 border rounded-lg bg-white dark:bg-gray-800"
                             >
                               <div>
-                                <Label htmlFor={`machine-${index}`}>Machine</Label>
+                                <Label htmlFor={`machine-${index}`}>Máquina</Label>
                                 <Select
                                   value={allocation.machineId}
                                   onValueChange={(value) => handleAllocationChange(index, "machineId", value)}
                                 >
                                   <SelectTrigger id={`machine-${index}`}>
-                                    <SelectValue placeholder="Select machine" />
+                                    <SelectValue placeholder="Seleccionar máquina" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {filteredMachines.length > 0 ? (
@@ -788,14 +788,14 @@ const MaterialMachineCreate = () => {
                                       ))
                                     ) : (
                                       <SelectItem value="no-machines" disabled>
-                                        No machines available
+                                        No hay máquinas disponibles
                                       </SelectItem>
                                     )}
                                   </SelectContent>
                                 </Select>
                               </div>
                               <div>
-                                <Label htmlFor={`quantity-${index}`}>Quantity</Label>
+                                <Label htmlFor={`quantity-${index}`}>Cantidad</Label>
                                 <Input
                                   id={`quantity-${index}`}
                                   type="number"
@@ -818,18 +818,18 @@ const MaterialMachineCreate = () => {
                           ))}
                         </div>
 
-                        {/* Submit Button */}
+                        {/* Botón de Envío */}
                         <div className="pt-4">
                           <Button type="submit" disabled={loading} className="w-full">
                             {loading ? (
                               <div className="flex items-center">
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Processing...
+                                Procesando...
                               </div>
                             ) : (
                               <>
                                 <Save className="w-4 h-4 mr-2" />
-                                Save Allocations
+                                Guardar Asignaciones
                               </>
                             )}
                           </Button>
@@ -842,38 +842,38 @@ const MaterialMachineCreate = () => {
             )}
           </div>
 
-          {/* Right Column - Summary & Details */}
+          {/* Columna Derecha - Resumen y Detalles */}
           <div className="space-y-6">
-            {/* Material Details */}
+            {/* Detalles del Material */}
             {materialDetails && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Box className="w-5 h-5" />
-                      Material Details
+                      Detalles del Material
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Reference</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Referencia</p>
                       <p className="font-medium">{materialDetails.reference}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Manufacturer</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Fabricante</p>
                       <p className="font-medium">{materialDetails.manufacturer}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Current Stock</p>
-                      <p className="font-medium text-lg">{materialDetails.currentStock}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Stock Actual</p>
+                      <p className="text-lg font-medium">{materialDetails.currentStock}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Minimum Stock</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Stock Mínimo</p>
                       <p className="font-medium">{materialDetails.minimumStock}</p>
                     </div>
                     {materialDetails.category && (
                       <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Category</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">Categoría</p>
                         <p className="font-medium">{materialDetails.category.name}</p>
                       </div>
                     )}
@@ -883,25 +883,25 @@ const MaterialMachineCreate = () => {
               </motion.div>
             )}
 
-            {/* Allocation Summary */}
+            {/* Resumen de Asignación */}
             {materialDetails && allocations.some((a) => a.machineId || a.allocatedStock > 0) && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Allocation Summary</CardTitle>
+                    <CardTitle>Resumen de Asignación</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span>Total Allocated:</span>
+                        <span>Total Asignado:</span>
                         <span className="font-medium">{totalAllocated}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Available Stock:</span>
+                        <span>Stock Disponible:</span>
                         <span className="font-medium">{materialDetails.currentStock}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Remaining:</span>
+                        <span>Restante:</span>
                         <span
                           className={`font-medium ${
                             materialDetails.currentStock - totalAllocated < 0 ? "text-red-600" : "text-green-600"
@@ -914,8 +914,10 @@ const MaterialMachineCreate = () => {
                       {totalAllocated > materialDetails.currentStock && (
                         <Alert variant="destructive">
                           <AlertCircle className="w-4 h-4" />
-                          <AlertTitle>Allocation Exceeds Stock</AlertTitle>
-                          <AlertDescription>You're trying to allocate more than available stock.</AlertDescription>
+                          <AlertTitle>La Asignación Excede el Stock</AlertTitle>
+                          <AlertDescription>
+                            Estás intentando asignar más de lo que hay en stock disponible.
+                          </AlertDescription>
                         </Alert>
                       )}
                     </div>
@@ -924,13 +926,13 @@ const MaterialMachineCreate = () => {
               </motion.div>
             )}
 
-            {/* Important Notice */}
+            {/* Aviso Importante */}
             <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
               <AlertCircle className="w-4 h-4 text-amber-600" />
-              <AlertTitle className="text-amber-800 dark:text-amber-200">Important</AlertTitle>
+              <AlertTitle className="text-amber-800 dark:text-amber-200">Importante</AlertTitle>
               <AlertDescription className="text-amber-700 dark:text-amber-300">
-                Allocating stock to machines will reduce the material's current stock. The allocated stock will be
-                subtracted from the material's available inventory.
+                Asignar stock a las máquinas reducirá el stock actual del material. El stock asignado se restará del
+                inventario disponible del material.
               </AlertDescription>
             </Alert>
           </div>

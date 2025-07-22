@@ -35,38 +35,38 @@ const MaterialMachineDetails = () => {
       setError(null)
 
       const response = await getAllAllocations()
-      console.log("API Response:", response) // Debug log
+      console.log("Respuesta de la API:", response) // Log de depuración
 
-      // Handle different response formats
+      // Manejar diferentes formatos de respuesta
       let allAllocations = []
       if (response && response.data && Array.isArray(response.data)) {
         allAllocations = response.data
       } else if (Array.isArray(response)) {
         allAllocations = response
       } else {
-        throw new Error("Invalid response format from API")
+        throw new Error("Formato de respuesta inválido de la API")
       }
 
       const currentAllocation = allAllocations.find((a) => a._id === id)
 
       if (!currentAllocation) {
-        setError("Allocation not found")
+        setError("Asignación no encontrada")
         toast({
           title: "Error",
-          description: "Allocation not found",
+          description: "Asignación no encontrada",
           variant: "destructive",
         })
         return
       }
 
-      // Sort history by date (newest first) if it exists
+      // Ordenar historial por fecha (más reciente primero) si existe
       if (currentAllocation.history && currentAllocation.history.length > 0) {
         currentAllocation.history.sort((a, b) => new Date(b.date) - new Date(a.date))
       }
 
       setAllocation(currentAllocation)
 
-      // Fetch material details to get current stock if material ID exists
+      // Obtener detalles del material para obtener el stock actual si existe el ID del material
       if (currentAllocation.material?._id) {
         try {
           const materialDetails = await getMaterialById(currentAllocation.material._id)
@@ -75,16 +75,16 @@ const MaterialMachineDetails = () => {
             material: materialDetails,
           }))
         } catch (materialError) {
-          console.error("Error fetching material details:", materialError)
-          // Don't fail the whole component if material details can't be fetched
+          console.error("Error al obtener detalles del material:", materialError)
+          // No fallar todo el componente si no se pueden obtener los detalles del material
         }
       }
     } catch (error) {
-      console.error("Error fetching allocation details:", error)
-      setError(error.message || "Failed to fetch allocation details")
+      console.error("Error al obtener detalles de la asignación:", error)
+      setError(error.message || "Error al obtener los detalles de la asignación")
       toast({
         title: "Error",
-        description: "Failed to fetch allocation details",
+        description: "Error al obtener los detalles de la asignación",
         variant: "destructive",
       })
     } finally {
@@ -96,7 +96,7 @@ const MaterialMachineDetails = () => {
     if (!dateString) return "N/A"
     try {
       const date = new Date(dateString)
-      return new Intl.DateTimeFormat("en-US", {
+      return new Intl.DateTimeFormat("es-ES", {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -104,23 +104,23 @@ const MaterialMachineDetails = () => {
         minute: "2-digit",
       }).format(date)
     } catch (error) {
-      return "Invalid Date"
+      return "Fecha Inválida"
     }
   }
 
-  // Loading state
+  // Estado de carga
   if (loading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-64">
           <div className="w-8 h-8 border-4 rounded-full animate-spin border-primary border-t-transparent"></div>
-          <span className="ml-2">Loading allocation details...</span>
+          <span className="ml-2">Cargando detalles de la asignación...</span>
         </div>
       </MainLayout>
     )
   }
 
-  // Error state
+  // Estado de error
   if (error) {
     return (
       <MainLayout>
@@ -133,7 +133,7 @@ const MaterialMachineDetails = () => {
           <div className="flex justify-center mt-4">
             <Button variant="outline" onClick={() => navigate("/machinematerial")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to List
+              Volver a la Lista
             </Button>
           </div>
         </div>
@@ -141,20 +141,20 @@ const MaterialMachineDetails = () => {
     )
   }
 
-  // No allocation found
+  // No se encontró asignación
   if (!allocation) {
     return (
       <MainLayout>
         <div className="container py-8 mx-auto">
           <Alert className="max-w-md mx-auto">
             <AlertCircle className="w-4 h-4" />
-            <AlertTitle>Not Found</AlertTitle>
-            <AlertDescription>The requested allocation could not be found.</AlertDescription>
+            <AlertTitle>No Encontrado</AlertTitle>
+            <AlertDescription>No se pudo encontrar la asignación solicitada.</AlertDescription>
           </Alert>
           <div className="flex justify-center mt-4">
             <Button variant="outline" onClick={() => navigate("/machinematerial")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to List
+              Volver a la Lista
             </Button>
           </div>
         </div>
@@ -174,13 +174,13 @@ const MaterialMachineDetails = () => {
         <div className="flex items-center justify-between mb-6">
           <Button variant="ghost" onClick={() => navigate("/machinematerial")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to List
+            Volver a la Lista
           </Button>
 
           <Button asChild>
             <Link to={`/machinematerial/edit/${id}`}>
               <Pencil className="w-4 h-4 mr-2" />
-              Edit Allocation
+              Editar Asignación
             </Link>
           </Button>
         </div>
@@ -191,67 +191,75 @@ const MaterialMachineDetails = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Package className="w-5 h-5 mr-2" />
-                  Material-Machine Allocation Details
+                  Detalles de Asignación Material-Máquina
                 </CardTitle>
-                <CardDescription>View details about this material allocation to a machine</CardDescription>
+                <CardDescription>Ver detalles sobre esta asignación de material a una máquina</CardDescription>
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="overview">
                   <TabsList className="mb-4">
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="history">History</TabsTrigger>
+                    <TabsTrigger value="overview">Resumen</TabsTrigger>
+                    <TabsTrigger value="history">Historial</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="overview" className="space-y-6">
                     <div className="grid gap-6 md:grid-cols-2">
                       <div>
-                        <h3 className="mb-2 text-lg font-medium">Material Information</h3>
+                        <h3 className="mb-2 text-lg font-medium">Información del Material</h3>
                         <div className="p-4 space-y-2 border rounded-md">
                           <div>
-                            <span className="text-sm text-muted-foreground">Reference:</span>
+                            <span className="text-sm text-muted-foreground">Referencia:</span>
                             <p className="font-medium">{allocation.material?.reference || "N/A"}</p>
                           </div>
                           <div>
-                            <span className="text-sm text-muted-foreground">Description:</span>
+                            <span className="text-sm text-muted-foreground">Descripción:</span>
                             <p className="font-medium">{allocation.material?.description || "N/A"}</p>
                           </div>
                           <div>
-                            <span className="text-sm text-muted-foreground">Manufacturer:</span>
+                            <span className="text-sm text-muted-foreground">Fabricante:</span>
                             <p className="font-medium">{allocation.material?.manufacturer || "N/A"}</p>
                           </div>
                           <div>
-                            <span className="text-sm text-muted-foreground">Current Stock:</span>
+                            <span className="text-sm text-muted-foreground">Stock Actual:</span>
                             <p className="font-medium">{allocation.material?.currentStock ?? "N/A"}</p>
                           </div>
                           <div>
-                            <span className="text-sm text-muted-foreground">Minimum Stock:</span>
+                            <span className="text-sm text-muted-foreground">Stock Mínimo:</span>
                             <p className="font-medium">{allocation.material?.minimumStock ?? "N/A"}</p>
                           </div>
                           <div>
-                            <span className="text-sm text-muted-foreground">Category:</span>
+                            <span className="text-sm text-muted-foreground">Categoría:</span>
                             <p className="font-medium">{allocation.material?.category?.name || "N/A"}</p>
                           </div>
                         </div>
                       </div>
 
                       <div>
-                        <h3 className="mb-2 text-lg font-medium">Machine Information</h3>
+                        <h3 className="mb-2 text-lg font-medium">Información de la Máquina</h3>
                         <div className="p-4 space-y-2 border rounded-md">
                           <div>
-                            <span className="text-sm text-muted-foreground">Name:</span>
+                            <span className="text-sm text-muted-foreground">Nombre:</span>
                             <p className="font-medium">{allocation.machine?.name || "N/A"}</p>
                           </div>
                           <div>
-                            <span className="text-sm text-muted-foreground">Description:</span>
+                            <span className="text-sm text-muted-foreground">Descripción:</span>
                             <p className="font-medium">{allocation.machine?.description || "N/A"}</p>
                           </div>
                           <div>
-                            <span className="text-sm text-muted-foreground">Status:</span>
-                            <p className="font-medium capitalize">{allocation.machine?.status || "N/A"}</p>
+                            <span className="text-sm text-muted-foreground">Estado:</span>
+                            <p className="font-medium capitalize">
+                              {allocation.machine?.status === "active"
+                                ? "activo"
+                                : allocation.machine?.status === "maintenance"
+                                  ? "mantenimiento"
+                                  : allocation.machine?.status === "inactive"
+                                    ? "inactivo"
+                                    : allocation.machine?.status || "N/A"}
+                            </p>
                           </div>
                           {allocation.machine?.factory && (
                             <div>
-                              <span className="text-sm text-muted-foreground">Factory:</span>
+                              <span className="text-sm text-muted-foreground">Fábrica:</span>
                               <div className="flex items-center gap-2">
                                 <Building2 className="w-4 h-4 text-muted-foreground" />
                                 <p className="font-medium">{allocation.machine.factory.name}</p>
@@ -265,15 +273,15 @@ const MaterialMachineDetails = () => {
                     <Separator />
 
                     <div>
-                      <h3 className="mb-2 text-lg font-medium">Allocation Details</h3>
+                      <h3 className="mb-2 text-lg font-medium">Detalles de la Asignación</h3>
                       <div className="p-4 border rounded-md">
                         <div className="grid gap-4 md:grid-cols-2">
                           <div>
-                            <span className="text-sm text-muted-foreground">Allocated Stock:</span>
+                            <span className="text-sm text-muted-foreground">Stock Asignado:</span>
                             <p className="text-2xl font-bold">{allocation.allocatedStock ?? 0}</p>
                           </div>
                           <div>
-                            <span className="text-sm text-muted-foreground">Last Updated:</span>
+                            <span className="text-sm text-muted-foreground">Última Actualización:</span>
                             <p className="font-medium">{formatDate(allocation.updatedAt)}</p>
                           </div>
                         </div>
@@ -285,7 +293,7 @@ const MaterialMachineDetails = () => {
                     <div className="space-y-4">
                       <h3 className="flex items-center text-lg font-medium">
                         <Clock className="w-4 h-4 mr-2" />
-                        Allocation History
+                        Historial de Asignaciones
                       </h3>
 
                       {allocation.history && allocation.history.length > 0 ? (
@@ -293,13 +301,13 @@ const MaterialMachineDetails = () => {
                           <table className="min-w-full divide-y divide-border">
                             <thead className="bg-muted">
                               <tr>
-                                <th className="px-4 py-2 text-xs font-medium text-left text-muted-foreground">Date</th>
+                                <th className="px-4 py-2 text-xs font-medium text-left text-muted-foreground">Fecha</th>
                                 <th className="px-4 py-2 text-xs font-medium text-left text-muted-foreground">
-                                  Previous
+                                  Anterior
                                 </th>
-                                <th className="px-4 py-2 text-xs font-medium text-left text-muted-foreground">New</th>
+                                <th className="px-4 py-2 text-xs font-medium text-left text-muted-foreground">Nuevo</th>
                                 <th className="px-4 py-2 text-xs font-medium text-left text-muted-foreground">
-                                  Comment
+                                  Comentario
                                 </th>
                               </tr>
                             </thead>
@@ -315,7 +323,7 @@ const MaterialMachineDetails = () => {
                                   <td className="px-4 py-2 text-sm">{formatDate(entry.date)}</td>
                                   <td className="px-4 py-2 text-sm">{entry.previousStock ?? "N/A"}</td>
                                   <td className="px-4 py-2 text-sm">{entry.newStock ?? "N/A"}</td>
-                                  <td className="px-4 py-2 text-sm">{entry.comment || "No comment"}</td>
+                                  <td className="px-4 py-2 text-sm">{entry.comment || "Sin comentario"}</td>
                                 </motion.tr>
                               ))}
                             </tbody>
@@ -323,7 +331,7 @@ const MaterialMachineDetails = () => {
                         </div>
                       ) : (
                         <div className="py-8 text-center border rounded-md">
-                          <p className="text-muted-foreground">No history available</p>
+                          <p className="text-muted-foreground">No hay historial disponible</p>
                         </div>
                       )}
                     </div>
@@ -338,7 +346,7 @@ const MaterialMachineDetails = () => {
               <CardHeader>
                 <CardTitle className="flex items-center text-base">
                   <Settings className="w-4 h-4 mr-2" />
-                  Quick Actions
+                  Acciones Rápidas
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -346,14 +354,14 @@ const MaterialMachineDetails = () => {
                   <Button asChild className="justify-start w-full">
                     <Link to={`/machinematerial/edit/${id}`}>
                       <Pencil className="w-4 h-4 mr-2" />
-                      Edit Allocation
+                      Editar Asignación
                     </Link>
                   </Button>
                   {allocation.material?._id && (
                     <Button asChild variant="outline" className="justify-start w-full bg-transparent">
                       <Link to={`/materials/edit/${allocation.material._id}`}>
                         <Package className="w-4 h-4 mr-2" />
-                        View Material Details
+                        Ver Detalles del Material
                       </Link>
                     </Button>
                   )}
@@ -363,7 +371,7 @@ const MaterialMachineDetails = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Allocation Summary</CardTitle>
+                <CardTitle className="text-base">Resumen de Asignación</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -372,12 +380,12 @@ const MaterialMachineDetails = () => {
                     <p className="font-medium">{allocation.material?.reference || "N/A"}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-muted-foreground">Machine:</span>
+                    <span className="text-sm text-muted-foreground">Máquina:</span>
                     <p className="font-medium">{allocation.machine?.name || "N/A"}</p>
                   </div>
                   {allocation.machine?.factory && (
                     <div>
-                      <span className="text-sm text-muted-foreground">Factory:</span>
+                      <span className="text-sm text-muted-foreground">Fábrica:</span>
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-muted-foreground" />
                         <p className="font-medium">{allocation.machine.factory.name}</p>
@@ -385,16 +393,16 @@ const MaterialMachineDetails = () => {
                     </div>
                   )}
                   <div>
-                    <span className="text-sm text-muted-foreground">Allocated Stock:</span>
+                    <span className="text-sm text-muted-foreground">Stock Asignado:</span>
                     <p className="text-xl font-bold">{allocation.allocatedStock ?? 0}</p>
                   </div>
                   <Separator />
                   <div>
-                    <span className="text-sm text-muted-foreground">Created:</span>
+                    <span className="text-sm text-muted-foreground">Creado:</span>
                     <p className="font-medium">{formatDate(allocation.createdAt)}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-muted-foreground">Last Updated:</span>
+                    <span className="text-sm text-muted-foreground">Última Actualización:</span>
                     <p className="font-medium">{formatDate(allocation.updatedAt)}</p>
                   </div>
                 </div>

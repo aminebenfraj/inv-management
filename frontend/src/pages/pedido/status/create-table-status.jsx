@@ -35,23 +35,23 @@ function CreateTableStatus() {
     setIsLoading(true)
 
     try {
-      // Validate required fields
+      // Validar campos requeridos
       if (!formData.name) {
-        throw new Error("Name is required")
+        throw new Error("El nombre es requerido")
       }
 
       await createTableStatus(formData)
       toast({
-        title: "Success",
-        description: "Table status created successfully",
+        title: "Éxito",
+        description: "Estado de tabla creado exitosamente",
       })
       navigate("/table-status")
     } catch (error) {
-      console.error("Error creating table status:", error)
+      console.error("Error al crear el estado de tabla:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to create table status",
+        description: error.message || "Error al crear el estado de tabla",
       })
     } finally {
       setIsLoading(false)
@@ -72,8 +72,8 @@ function CreateTableStatus() {
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Create Table Status</h1>
-              <p className="text-muted-foreground">Add a new status for the order table</p>
+              <h1 className="text-3xl font-bold tracking-tight">Crear Estado de Tabla</h1>
+              <p className="text-muted-foreground">Agregar un nuevo estado para la tabla de pedidos</p>
             </div>
           </div>
         </div>
@@ -81,12 +81,14 @@ function CreateTableStatus() {
         <Card className="max-w-2xl mx-auto">
           <form onSubmit={handleSubmit}>
             <CardHeader>
-              <CardTitle>Table Status Details</CardTitle>
-              <CardDescription>Create a new status that will be used to track orders in the system</CardDescription>
+              <CardTitle>Detalles del Estado de Tabla</CardTitle>
+              <CardDescription>
+                Crear un nuevo estado que se utilizará para rastrear pedidos en el sistema
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">Nombre *</Label>
                 <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required />
               </div>
 
@@ -106,19 +108,19 @@ function CreateTableStatus() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="order">Display Order</Label>
+                <Label htmlFor="order">Orden de Visualización</Label>
                 <Input id="order" name="order" type="number" value={formData.order} onChange={handleInputChange} />
-                <p className="text-sm text-muted-foreground">Lower numbers will appear first in the list</p>
+                <p className="text-sm text-muted-foreground">Los números más bajos aparecerán primero en la lista</p>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline" type="button" onClick={() => navigate("/table-status")}>
-                Cancel
+                Cancelar
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Save className="w-4 h-4 mr-2" />
-                Save Status
+                Guardar Estado
               </Button>
             </CardFooter>
           </form>
@@ -129,4 +131,3 @@ function CreateTableStatus() {
 }
 
 export default CreateTableStatus
-

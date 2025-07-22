@@ -21,18 +21,18 @@ function ShowSolicitante() {
   useEffect(() => {
     const fetchSolicitantes = async () => {
       try {
-        console.log("Fetching all solicitantes")
+        console.log("Obteniendo todos los solicitantes")
         const data = await getAllSolicitantes()
 
         if (!data || !Array.isArray(data)) {
-          setError("No requesters found or invalid data format")
+          setError("No se encontraron solicitantes o formato de datos inválido")
         } else {
-          console.log("Solicitantes data:", data)
+          console.log("Datos de solicitantes:", data)
           setSolicitantes(data)
         }
       } catch (error) {
-        console.error("Error fetching requesters:", error)
-        setError(error.message || "Failed to load requesters data")
+        console.error("Error al obtener solicitantes:", error)
+        setError(error.message || "Error al cargar los datos de solicitantes")
       } finally {
         setIsLoading(false)
       }
@@ -66,7 +66,7 @@ function ShowSolicitante() {
           </div>
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-6">
-              <p>Unable to load requesters. Please try again.</p>
+              <p>No se pudieron cargar los solicitantes. Por favor, inténtalo de nuevo.</p>
             </CardContent>
           </Card>
         </div>
@@ -88,28 +88,28 @@ function ShowSolicitante() {
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Requesters</h1>
-              <p className="text-muted-foreground">View and manage all requesters</p>
+              <h1 className="text-3xl font-bold tracking-tight">Solicitantes</h1>
+              <p className="text-muted-foreground">Ver y gestionar todos los solicitantes</p>
             </div>
           </div>
           <Button onClick={() => navigate("/solicitante/create")}>
             <Plus className="w-4 h-4 mr-2" />
-            Add New Requester
+            Agregar Nuevo Solicitante
           </Button>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>All Requesters</CardTitle>
-            <CardDescription>List of all available requesters in the system</CardDescription>
+            <CardTitle>Todos los Solicitantes</CardTitle>
+            <CardDescription>Lista de todos los solicitantes disponibles en el sistema</CardDescription>
           </CardHeader>
           <CardContent>
             {solicitantes.length === 0 ? (
               <div className="py-6 text-center">
-                <p className="text-muted-foreground">No requesters found. Create your first one!</p>
+                <p className="text-muted-foreground">No se encontraron solicitantes. ¡Crea el primero!</p>
                 <Button className="mt-4" onClick={() => navigate("/solicitante/create")}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Requester
+                  Crear Solicitante
                 </Button>
               </div>
             ) : (
@@ -132,7 +132,7 @@ function ShowSolicitante() {
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/solicitante/edit/${solicitante._id}`)}>
                       <Edit className="w-4 h-4 mr-2" />
-                      Edit
+                      Editar
                     </Button>
                   </div>
                 ))}
@@ -146,4 +146,3 @@ function ShowSolicitante() {
 }
 
 export default ShowSolicitante
-

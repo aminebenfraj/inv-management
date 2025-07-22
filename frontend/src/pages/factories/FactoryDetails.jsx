@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { getFactoryById } from "../../apis/gestionStockApi/factoryApi"
-import { getAllMachines } from "../../apis/gestionStockApi/machineApi" // Assuming this can take a factoryId filter
-import { getAllMaterials } from "../../apis/gestionStockApi/materialApi" // Assuming this can take a factoryId filter
+import { getAllMachines } from "../../apis/gestionStockApi/machineApi"
+import { getAllMaterials } from "../../apis/gestionStockApi/materialApi"
 import {
   ArrowLeft,
   Edit,
@@ -52,28 +52,23 @@ const FactoryDetails = () => {
       setLoading(true)
       setError(null)
 
-      // Fetch factory details
       const factoryData = await getFactoryById(id)
       setFactory(factoryData)
 
-      // Fetch machines for this factory by passing factoryId as a filter
-      // Assuming getAllMachines can accept a 'factory' filter
       const machinesResponse = await getAllMachines(1, 100, "", { factory: id })
       const factoryMachines = Array.isArray(machinesResponse) ? machinesResponse : machinesResponse?.data || []
       setMachines(factoryMachines)
 
-      // Fetch materials for this factory by passing factoryId as a filter
-      // Assuming getAllMaterials can accept a 'factory' filter
       const materialsResponse = await getAllMaterials(1, 100, "", { factory: id })
       const factoryMaterials = Array.isArray(materialsResponse) ? materialsResponse : materialsResponse?.data || []
       setMaterials(factoryMaterials)
     } catch (error) {
-      console.error("Failed to fetch factory details:", error)
-      setError("Failed to fetch factory details")
+      console.error("Error al obtener detalles de la fábrica:", error)
+      setError("Error al obtener detalles de la fábrica")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch factory details. Please try again.",
+        description: "Error al obtener detalles de la fábrica. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setLoading(false)
@@ -86,21 +81,21 @@ const FactoryDetails = () => {
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-green-700 border-green-200 bg-green-50">
             <CheckCircle className="w-3 h-3" />
-            Active
+            Activa
           </Badge>
         )
       case "inactive":
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-red-700 border-red-200 bg-red-50">
             <PowerOff className="w-3 h-3" />
-            Inactive
+            Inactiva
           </Badge>
         )
       case "maintenance":
         return (
           <Badge variant="outline" className="flex items-center gap-1 bg-amber-50 text-amber-700 border-amber-200">
             <Wrench className="w-3 h-3" />
-            Maintenance
+            Mantenimiento
           </Badge>
         )
       default:
@@ -113,19 +108,19 @@ const FactoryDetails = () => {
       case "active":
         return (
           <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">
-            Active
+            Activa
           </Badge>
         )
       case "inactive":
         return (
           <Badge variant="outline" className="text-red-700 border-red-200 bg-red-50">
-            Inactive
+            Inactiva
           </Badge>
         )
       case "maintenance":
         return (
           <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-            Maintenance
+            Mantenimiento
           </Badge>
         )
       default:
@@ -135,18 +130,18 @@ const FactoryDetails = () => {
 
   const getStockStatusBadge = (material) => {
     if (material.currentStock <= 0) {
-      return <Badge variant="destructive">Out of Stock</Badge>
+      return <Badge variant="destructive">Sin Stock</Badge>
     }
     if (material.currentStock <= material.minimumStock) {
       return (
         <Badge variant="secondary" className="bg-amber-50 text-amber-700 border-amber-200">
-          Low Stock
+          Stock Bajo
         </Badge>
       )
     }
     return (
       <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">
-        In Stock
+        En Stock
       </Badge>
     )
   }
@@ -168,11 +163,11 @@ const FactoryDetails = () => {
           <Alert variant="destructive">
             <AlertCircle className="w-4 h-4" />
             <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error || "Factory not found"}</AlertDescription>
+            <AlertDescription>{error || "Fábrica no encontrada"}</AlertDescription>
           </Alert>
           <Button onClick={() => navigate("/factories")} className="mt-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Factories
+            Volver a Fábricas
           </Button>
         </div>
       </MainLayout>
@@ -186,14 +181,14 @@ const FactoryDetails = () => {
           <div className="flex items-center gap-2">
             <Button variant="ghost" onClick={() => navigate("/factories")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Factories
+              Volver a Fábricas
             </Button>
           </div>
           <div className="flex items-center gap-2">
             <Link to={`/factories/edit/${factory._id}`}>
               <Button variant="outline">
                 <Edit className="w-4 h-4 mr-2" />
-                Edit Factory
+                Editar Fábrica
               </Button>
             </Link>
           </div>
@@ -206,7 +201,7 @@ const FactoryDetails = () => {
                 <Building2 className="w-8 h-8 text-blue-500" />
                 <div>
                   <CardTitle className="text-2xl">{factory.name}</CardTitle>
-                  <CardDescription>{factory.description || "No description provided"}</CardDescription>
+                  <CardDescription>{factory.description || "Sin descripción proporcionada"}</CardDescription>
                 </div>
               </div>
               {getStatusBadge(factory.status)}
@@ -217,21 +212,21 @@ const FactoryDetails = () => {
               <div className="flex items-center gap-3">
                 <Cog className="w-5 h-5 text-blue-500" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Machines</p>
+                  <p className="text-sm text-muted-foreground">Máquinas</p>
                   <p className="text-2xl font-bold">{machines.length}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Package className="w-5 h-5 text-green-500" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Materials</p>
+                  <p className="text-sm text-muted-foreground">Materiales</p>
                   <p className="text-2xl font-bold">{materials.length}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Users className="w-5 h-5 text-purple-500" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Authorized Users</p>
+                  <p className="text-sm text-muted-foreground">Usuarios Autorizados</p>
                   <p className="text-2xl font-bold">{factory.authorizedUsers?.length || 0}</p>
                 </div>
               </div>
@@ -241,7 +236,7 @@ const FactoryDetails = () => {
               <div className="flex items-center gap-2 p-3 mt-4 rounded-md bg-blue-50">
                 <UserCheck className="w-4 h-4 text-blue-500" />
                 <span className="text-sm">
-                  <strong>Manager:</strong> {factory.manager.username} ({factory.manager.email})
+                  <strong>Gerente:</strong> {factory.manager.username} ({factory.manager.email})
                 </span>
               </div>
             )}
@@ -250,9 +245,9 @@ const FactoryDetails = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="machines">Machines ({machines.length})</TabsTrigger>
-            <TabsTrigger value="materials">Materials ({materials.length})</TabsTrigger>
+            <TabsTrigger value="overview">Resumen</TabsTrigger>
+            <TabsTrigger value="machines">Máquinas ({machines.length})</TabsTrigger>
+            <TabsTrigger value="materials">Materiales ({materials.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -261,25 +256,25 @@ const FactoryDetails = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Cog className="w-5 h-5" />
-                    Machine Status Overview
+                    Resumen del Estado de Máquinas
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span>Active Machines</span>
+                      <span>Máquinas Activas</span>
                       <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">
                         {machines.filter((m) => m.status === "active").length}
                       </Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span>Inactive Machines</span>
+                      <span>Máquinas Inactivas</span>
                       <Badge variant="outline" className="text-red-700 border-red-200 bg-red-50">
                         {machines.filter((m) => m.status === "inactive").length}
                       </Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span>Under Maintenance</span>
+                      <span>En Mantenimiento</span>
                       <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                         {machines.filter((m) => m.status === "maintenance").length}
                       </Badge>
@@ -292,25 +287,25 @@ const FactoryDetails = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Package className="w-5 h-5" />
-                    Material Stock Overview
+                    Resumen del Stock de Materiales
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span>In Stock</span>
+                      <span>En Stock</span>
                       <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">
                         {materials.filter((m) => m.currentStock > m.minimumStock).length}
                       </Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span>Low Stock</span>
+                      <span>Stock Bajo</span>
                       <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                         {materials.filter((m) => m.currentStock <= m.minimumStock && m.currentStock > 0).length}
                       </Badge>
                     </div>
                     <div className="flex justify-between">
-                      <span>Out of Stock</span>
+                      <span>Sin Stock</span>
                       <Badge variant="destructive">{materials.filter((m) => m.currentStock <= 0).length}</Badge>
                     </div>
                   </div>
@@ -323,7 +318,7 @@ const FactoryDetails = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="w-5 h-5" />
-                    Authorized Users
+                    Usuarios Autorizados
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -349,10 +344,10 @@ const FactoryDetails = () => {
 
           <TabsContent value="machines" className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Factory Machines</h3>
+              <h3 className="text-lg font-medium">Máquinas de la Fábrica</h3>
               <Link to={`/machines?factory=${factory._id}`}>
                 <Button variant="outline" size="sm">
-                  View All Machines
+                  Ver Todas las Máquinas
                 </Button>
               </Link>
             </div>
@@ -361,10 +356,10 @@ const FactoryDetails = () => {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Cog className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="mb-2 text-lg font-medium">No Machines Found</h3>
-                  <p className="mb-4 text-muted-foreground">This factory doesn't have any machines assigned yet.</p>
+                  <h3 className="mb-2 text-lg font-medium">No se Encontraron Máquinas</h3>
+                  <p className="mb-4 text-muted-foreground">Esta fábrica aún no tiene máquinas asignadas.</p>
                   <Link to="/machines/create">
-                    <Button>Add Machine</Button>
+                    <Button>Agregar Máquina</Button>
                   </Link>
                 </CardContent>
               </Card>
@@ -388,14 +383,14 @@ const FactoryDetails = () => {
                         </CardHeader>
                         <CardContent>
                           <p className="mb-3 text-sm text-muted-foreground">
-                            {machine.description || "No description"}
+                            {machine.description || "Sin descripción"}
                           </p>
                           <div className="flex items-center justify-between">
                             {getMachineStatusBadge(machine.status)}
                             <Link to={`/machines/edit/${machine._id}`}>
                               <Button variant="ghost" size="sm">
                                 <Eye className="w-4 h-4 mr-2" />
-                                View
+                                Ver
                               </Button>
                             </Link>
                           </div>
@@ -410,10 +405,10 @@ const FactoryDetails = () => {
 
           <TabsContent value="materials" className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">Factory Materials</h3>
+              <h3 className="text-lg font-medium">Materiales de la Fábrica</h3>
               <Link to={`/materials?factory=${factory._id}`}>
                 <Button variant="outline" size="sm">
-                  View All Materials
+                  Ver Todos los Materiales
                 </Button>
               </Link>
             </div>
@@ -422,10 +417,10 @@ const FactoryDetails = () => {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="mb-2 text-lg font-medium">No Materials Found</h3>
-                  <p className="mb-4 text-muted-foreground">This factory doesn't have any materials assigned yet.</p>
+                  <h3 className="mb-2 text-lg font-medium">No se Encontraron Materiales</h3>
+                  <p className="mb-4 text-muted-foreground">Esta fábrica aún no tiene materiales asignados.</p>
                   <Link to="/materials/create">
-                    <Button>Add Material</Button>
+                    <Button>Agregar Material</Button>
                   </Link>
                 </CardContent>
               </Card>
@@ -450,14 +445,14 @@ const FactoryDetails = () => {
                         <CardContent>
                           <p className="mb-2 text-sm text-muted-foreground">{material.manufacturer}</p>
                           <p className="mb-3 text-sm text-muted-foreground">
-                            Stock: {material.currentStock} / Min: {material.minimumStock}
+                            Stock: {material.currentStock} / Mín: {material.minimumStock}
                           </p>
                           <div className="flex items-center justify-between">
                             {getStockStatusBadge(material)}
                             <Link to={`/materials/details/${material._id}`}>
                               <Button variant="ghost" size="sm">
                                 <Eye className="w-4 h-4 mr-2" />
-                                View
+                                Ver
                               </Button>
                             </Link>
                           </div>

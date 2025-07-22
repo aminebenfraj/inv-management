@@ -21,18 +21,18 @@ function ShowTipo() {
   useEffect(() => {
     const fetchTipos = async () => {
       try {
-        console.log("Fetching all tipos")
+        console.log("Obteniendo todos los tipos")
         const data = await getAllTipos()
 
         if (!data || !Array.isArray(data)) {
-          setError("No types found or invalid data format")
+          setError("No se encontraron tipos o formato de datos inválido")
         } else {
-          console.log("Tipos data:", data)
+          console.log("Datos de tipos:", data)
           setTipos(data)
         }
       } catch (error) {
-        console.error("Error fetching types:", error)
-        setError(error.message || "Failed to load types data")
+        console.error("Error al obtener tipos:", error)
+        setError(error.message || "Error al cargar los datos de tipos")
       } finally {
         setIsLoading(false)
       }
@@ -66,7 +66,7 @@ function ShowTipo() {
           </div>
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-6">
-              <p>Unable to load types. Please try again.</p>
+              <p>No se pueden cargar los tipos. Por favor, inténtalo de nuevo.</p>
             </CardContent>
           </Card>
         </div>
@@ -88,28 +88,28 @@ function ShowTipo() {
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Order Types</h1>
-              <p className="text-muted-foreground">View and manage all order types</p>
+              <h1 className="text-3xl font-bold tracking-tight">Tipos de Pedido</h1>
+              <p className="text-muted-foreground">Ver y gestionar todos los tipos de pedido</p>
             </div>
           </div>
           <Button onClick={() => navigate("/tipo/create")}>
             <Plus className="w-4 h-4 mr-2" />
-            Add New Type
+            Agregar Nuevo Tipo
           </Button>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>All Order Types</CardTitle>
-            <CardDescription>List of all available order types in the system</CardDescription>
+            <CardTitle>Todos los Tipos de Pedido</CardTitle>
+            <CardDescription>Lista de todos los tipos de pedido disponibles en el sistema</CardDescription>
           </CardHeader>
           <CardContent>
             {tipos.length === 0 ? (
               <div className="py-6 text-center">
-                <p className="text-muted-foreground">No order types found. Create your first one!</p>
+                <p className="text-muted-foreground">No se encontraron tipos de pedido. ¡Crea el primero!</p>
                 <Button className="mt-4" onClick={() => navigate("/tipo/create")}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Order Type
+                  Crear Tipo de Pedido
                 </Button>
               </div>
             ) : (
@@ -127,7 +127,7 @@ function ShowTipo() {
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/tipo/edit/${tipo._id}`)}>
                       <Edit className="w-4 h-4 mr-2" />
-                      Edit
+                      Editar
                     </Button>
                   </div>
                 ))}
@@ -141,4 +141,3 @@ function ShowTipo() {
 }
 
 export default ShowTipo
-

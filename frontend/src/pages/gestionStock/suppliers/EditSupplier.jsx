@@ -68,12 +68,12 @@ const EditSupplier = () => {
       const data = await getSupplierById(id)
       setSupplier(data)
     } catch (error) {
-      console.error("Failed to fetch supplier:", error)
-      setError("Failed to fetch supplier details. Please try again.")
+      console.error("Error al obtener proveedor:", error)
+      setError("Error al obtener los detalles del proveedor. Por favor, inténtalo de nuevo.")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch supplier details. Please try again.",
+        description: "Error al obtener los detalles del proveedor. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setIsLoading(false)
@@ -93,21 +93,20 @@ const EditSupplier = () => {
     try {
       await updateSupplier(id, supplier)
       toast({
-        title: "Success",
-        description: "Supplier updated successfully!",
+        title: "Éxito",
+        description: "¡Proveedor actualizado exitosamente!",
       })
 
-      // Navigate after a short delay
       setTimeout(() => {
         navigate("/suppliers")
       }, 1500)
     } catch (error) {
-      console.error("Failed to update supplier:", error)
-      setError("Failed to update supplier. Please try again.")
+      console.error("Error al actualizar proveedor:", error)
+      setError("Error al actualizar proveedor. Por favor, inténtalo de nuevo.")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update supplier. Please try again.",
+        description: "Error al actualizar proveedor. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setIsSaving(false)
@@ -157,10 +156,10 @@ const EditSupplier = () => {
           <CardHeader className="bg-gradient-to-r from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900">
             <CardTitle className="flex items-center text-xl font-semibold text-zinc-900 dark:text-zinc-100">
               <Building className="w-5 h-5 mr-2 text-zinc-500 dark:text-zinc-400" />
-              {supplier.companyName || "Edit Supplier"}
+              {supplier.companyName || "Editar Proveedor"}
             </CardTitle>
             <CardDescription className="text-zinc-500 dark:text-zinc-400">
-              Update supplier information and contact details
+              Actualiza la información del proveedor y los detalles de contacto
             </CardDescription>
           </CardHeader>
 
@@ -182,19 +181,19 @@ const EditSupplier = () => {
                     value="company"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-zinc-900 dark:data-[state=active]:border-zinc-100 rounded-none px-4 py-3 data-[state=active]:shadow-none"
                   >
-                    Company Info
+                    Información de la Empresa
                   </TabsTrigger>
                   <TabsTrigger
                     value="contacts"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-zinc-900 dark:data-[state=active]:border-zinc-100 rounded-none px-4 py-3 data-[state=active]:shadow-none"
                   >
-                    Contact Details
+                    Detalles de Contacto
                   </TabsTrigger>
                   <TabsTrigger
                     value="technical"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-zinc-900 dark:data-[state=active]:border-zinc-100 rounded-none px-4 py-3 data-[state=active]:shadow-none"
                   >
-                    Technical Info
+                    Información Técnica
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -210,7 +209,7 @@ const EditSupplier = () => {
                   <motion.div variants={formVariants} initial="hidden" animate="visible" className="space-y-6">
                     <motion.div variants={formItemVariants} className="space-y-2">
                       <Label htmlFor="companyName" className="text-zinc-700 dark:text-zinc-300">
-                        Company Name <span className="text-red-500">*</span>
+                        Nombre de la Empresa <span className="text-red-500">*</span>
                       </Label>
                       <div className="relative">
                         <Building className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -221,14 +220,14 @@ const EditSupplier = () => {
                           onChange={handleChange}
                           required
                           className="pl-10"
-                          placeholder="Enter company name"
+                          placeholder="Ingresa el nombre de la empresa"
                         />
                       </div>
                     </motion.div>
 
                     <motion.div variants={formItemVariants} className="space-y-2">
                       <Label htmlFor="name" className="text-zinc-700 dark:text-zinc-300">
-                        Primary Contact Name
+                        Nombre del Contacto Principal
                       </Label>
                       <div className="relative">
                         <User className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -238,7 +237,7 @@ const EditSupplier = () => {
                           value={supplier.name}
                           onChange={handleChange}
                           className="pl-10"
-                          placeholder="Enter primary contact name"
+                          placeholder="Ingresa el nombre del contacto principal"
                         />
                       </div>
                     </motion.div>
@@ -246,7 +245,7 @@ const EditSupplier = () => {
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <motion.div variants={formItemVariants} className="space-y-2">
                         <Label htmlFor="businessPhone" className="text-zinc-700 dark:text-zinc-300">
-                          Business Phone
+                          Teléfono Comercial
                         </Label>
                         <div className="relative">
                           <Phone className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -256,14 +255,14 @@ const EditSupplier = () => {
                             value={supplier.businessPhone}
                             onChange={handleChange}
                             className="pl-10"
-                            placeholder="Enter business phone"
+                            placeholder="Ingresa el teléfono comercial"
                           />
                         </div>
                       </motion.div>
 
                       <motion.div variants={formItemVariants} className="space-y-2">
                         <Label htmlFor="businessEmail" className="text-zinc-700 dark:text-zinc-300">
-                          Business Email
+                          Email Comercial
                         </Label>
                         <div className="relative">
                           <Mail className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -274,7 +273,7 @@ const EditSupplier = () => {
                             value={supplier.businessEmail}
                             onChange={handleChange}
                             className="pl-10"
-                            placeholder="Enter business email"
+                            placeholder="Ingresa el email comercial"
                           />
                         </div>
                       </motion.div>
@@ -286,7 +285,7 @@ const EditSupplier = () => {
                   <motion.div variants={formVariants} initial="hidden" animate="visible" className="space-y-6">
                     <motion.div variants={formItemVariants} className="space-y-2">
                       <Label htmlFor="commercialContact" className="text-zinc-700 dark:text-zinc-300">
-                        Commercial Contact
+                        Contacto Comercial
                       </Label>
                       <div className="relative">
                         <User className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -296,14 +295,14 @@ const EditSupplier = () => {
                           value={supplier.commercialContact}
                           onChange={handleChange}
                           className="pl-10"
-                          placeholder="Enter commercial contact name"
+                          placeholder="Ingresa el nombre del contacto comercial"
                         />
                       </div>
                     </motion.div>
 
                     <motion.div variants={formItemVariants} className="space-y-2">
                       <Label htmlFor="companyContact" className="text-zinc-700 dark:text-zinc-300">
-                        Company Contact
+                        Contacto de la Empresa
                       </Label>
                       <div className="relative">
                         <User className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -313,7 +312,7 @@ const EditSupplier = () => {
                           value={supplier.companyContact}
                           onChange={handleChange}
                           className="pl-10"
-                          placeholder="Enter company contact name"
+                          placeholder="Ingresa el nombre del contacto de la empresa"
                         />
                       </div>
                     </motion.div>
@@ -323,7 +322,7 @@ const EditSupplier = () => {
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <motion.div variants={formItemVariants} className="space-y-2">
                         <Label htmlFor="officePhone" className="text-zinc-700 dark:text-zinc-300">
-                          Office Phone
+                          Teléfono de Oficina
                         </Label>
                         <div className="relative">
                           <Phone className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -333,14 +332,14 @@ const EditSupplier = () => {
                             value={supplier.officePhone}
                             onChange={handleChange}
                             className="pl-10"
-                            placeholder="Enter office phone"
+                            placeholder="Ingresa el teléfono de oficina"
                           />
                         </div>
                       </motion.div>
 
                       <motion.div variants={formItemVariants} className="space-y-2">
                         <Label htmlFor="companyEmail" className="text-zinc-700 dark:text-zinc-300">
-                          Company Email
+                          Email de la Empresa
                         </Label>
                         <div className="relative">
                           <Mail className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -351,7 +350,7 @@ const EditSupplier = () => {
                             value={supplier.companyEmail}
                             onChange={handleChange}
                             className="pl-10"
-                            placeholder="Enter company email"
+                            placeholder="Ingresa el email de la empresa"
                           />
                         </div>
                       </motion.div>
@@ -363,7 +362,7 @@ const EditSupplier = () => {
                   <motion.div variants={formVariants} initial="hidden" animate="visible" className="space-y-6">
                     <motion.div variants={formItemVariants} className="space-y-2">
                       <Label htmlFor="technicalContact" className="text-zinc-700 dark:text-zinc-300">
-                        Technical Contact
+                        Contacto Técnico
                       </Label>
                       <div className="relative">
                         <User className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -373,7 +372,7 @@ const EditSupplier = () => {
                           value={supplier.technicalContact}
                           onChange={handleChange}
                           className="pl-10"
-                          placeholder="Enter technical contact name"
+                          placeholder="Ingresa el nombre del contacto técnico"
                         />
                       </div>
                     </motion.div>
@@ -381,7 +380,7 @@ const EditSupplier = () => {
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <motion.div variants={formItemVariants} className="space-y-2">
                         <Label htmlFor="technicalPhone" className="text-zinc-700 dark:text-zinc-300">
-                          Technical Phone
+                          Teléfono Técnico
                         </Label>
                         <div className="relative">
                           <Phone className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -391,14 +390,14 @@ const EditSupplier = () => {
                             value={supplier.technicalPhone}
                             onChange={handleChange}
                             className="pl-10"
-                            placeholder="Enter technical phone"
+                            placeholder="Ingresa el teléfono técnico"
                           />
                         </div>
                       </motion.div>
 
                       <motion.div variants={formItemVariants} className="space-y-2">
                         <Label htmlFor="technicalEmail" className="text-zinc-700 dark:text-zinc-300">
-                          Technical Email
+                          Email Técnico
                         </Label>
                         <div className="relative">
                           <Mail className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -409,7 +408,7 @@ const EditSupplier = () => {
                             value={supplier.technicalEmail}
                             onChange={handleChange}
                             className="pl-10"
-                            placeholder="Enter technical email"
+                            placeholder="Ingresa el email técnico"
                           />
                         </div>
                       </motion.div>
@@ -426,7 +425,7 @@ const EditSupplier = () => {
                 onClick={() => navigate("/suppliers")}
                 className="border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
               >
-                Cancel
+                Cancelar
               </Button>
               <Button
                 type="submit"
@@ -436,12 +435,12 @@ const EditSupplier = () => {
                 {isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
+                    Guardando...
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    Save Changes
+                    Guardar Cambios
                   </>
                 )}
               </Button>

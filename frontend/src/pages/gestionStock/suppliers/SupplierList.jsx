@@ -73,12 +73,12 @@ const SupplierList = () => {
       const data = await getAllSuppliers()
       setSuppliers(data)
     } catch (error) {
-      console.error("Failed to fetch suppliers:", error)
-      setError("Failed to fetch suppliers. Please try again.")
+      console.error("Error al obtener proveedores:", error)
+      setError("Error al obtener proveedores. Por favor, inténtalo de nuevo.")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch suppliers. Please try again.",
+        description: "Error al obtener proveedores. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setIsLoading(false)
@@ -98,15 +98,15 @@ const SupplierList = () => {
       await deleteSupplier(supplierToDelete._id)
       setSuppliers(suppliers.filter((supplier) => supplier._id !== supplierToDelete._id))
       toast({
-        title: "Success",
-        description: "Supplier deleted successfully!",
+        title: "Éxito",
+        description: "¡Proveedor eliminado exitosamente!",
       })
     } catch (error) {
-      console.error("Failed to delete supplier:", error)
+      console.error("Error al eliminar proveedor:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete supplier. Please try again.",
+        description: "Error al eliminar proveedor. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setIsDeleting(false)
@@ -129,16 +129,18 @@ const SupplierList = () => {
         <Card className="overflow-hidden shadow-lg border-zinc-200 dark:border-zinc-700">
           <CardHeader className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 bg-gradient-to-r from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900">
             <div>
-              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Supplier Management</CardTitle>
+              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                Gestión de Proveedores
+              </CardTitle>
               <CardDescription className="text-zinc-500 dark:text-zinc-400">
-                Manage your suppliers and their contact information
+                Gestiona tus proveedores y su información de contacto
               </CardDescription>
             </div>
             <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
               <div className="relative">
                 <Search className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
                 <Input
-                  placeholder="Search suppliers..."
+                  placeholder="Buscar proveedores..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 md:w-64"
@@ -147,7 +149,7 @@ const SupplierList = () => {
               <Link to="/suppliers/create">
                 <Button className="w-full text-white md:w-auto bg-gradient-to-r from-zinc-800 to-zinc-900 hover:from-zinc-700 hover:to-zinc-800 dark:from-zinc-200 dark:to-white dark:text-zinc-900 dark:hover:from-zinc-100 dark:hover:to-zinc-300">
                   <Plus className="w-4 h-4 mr-2" />
-                  Add New Supplier
+                  Agregar Nuevo Proveedor
                 </Button>
               </Link>
             </div>
@@ -170,13 +172,13 @@ const SupplierList = () => {
                   value="table"
                   className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-zinc-900 dark:data-[state=active]:border-zinc-100 px-6 py-3"
                 >
-                  Table View
+                  Vista de Tabla
                 </TabsTrigger>
                 <TabsTrigger
                   value="grid"
                   className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-zinc-900 dark:data-[state=active]:border-zinc-100 px-6 py-3"
                 >
-                  Grid View
+                  Vista de Cuadrícula
                 </TabsTrigger>
               </TabsList>
 
@@ -185,7 +187,7 @@ const SupplierList = () => {
                   <div className="flex items-center justify-center h-64">
                     <div className="flex flex-col items-center space-y-2">
                       <div className="w-8 h-8 border-4 rounded-full border-t-zinc-900 dark:border-t-zinc-100 border-zinc-200 dark:border-zinc-700 animate-spin"></div>
-                      <p className="text-zinc-500 dark:text-zinc-400">Loading suppliers...</p>
+                      <p className="text-zinc-500 dark:text-zinc-400">Cargando proveedores...</p>
                     </div>
                   </div>
                 ) : filteredSuppliers.length === 0 ? (
@@ -193,19 +195,23 @@ const SupplierList = () => {
                     <div className="p-3 mb-4 rounded-full bg-zinc-100 dark:bg-zinc-700">
                       <Building className="w-8 h-8 text-zinc-500 dark:text-zinc-400" />
                     </div>
-                    <h3 className="mb-1 text-xl font-medium text-zinc-900 dark:text-zinc-100">No suppliers found</h3>
+                    <h3 className="mb-1 text-xl font-medium text-zinc-900 dark:text-zinc-100">
+                      No se encontraron proveedores
+                    </h3>
                     <p className="mb-4 text-zinc-500 dark:text-zinc-400">
-                      {searchTerm ? "Try a different search term" : "Add your first supplier to get started"}
+                      {searchTerm
+                        ? "Intenta con un término de búsqueda diferente"
+                        : "Agrega tu primer proveedor para comenzar"}
                     </p>
                     {searchTerm ? (
                       <Button variant="outline" onClick={() => setSearchTerm("")}>
-                        Clear Search
+                        Limpiar Búsqueda
                       </Button>
                     ) : (
                       <Link to="/suppliers/create">
                         <Button>
                           <Plus className="w-4 h-4 mr-2" />
-                          Add New Supplier
+                          Agregar Nuevo Proveedor
                         </Button>
                       </Link>
                     )}
@@ -215,11 +221,11 @@ const SupplierList = () => {
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800">
-                          <TableHead className="font-medium">Company Name</TableHead>
-                          <TableHead className="font-medium">Contact Name</TableHead>
-                          <TableHead className="font-medium">Business Phone</TableHead>
-                          <TableHead className="font-medium">Business Email</TableHead>
-                          <TableHead className="font-medium text-right">Actions</TableHead>
+                          <TableHead className="font-medium">Nombre de la Empresa</TableHead>
+                          <TableHead className="font-medium">Nombre del Contacto</TableHead>
+                          <TableHead className="font-medium">Teléfono Comercial</TableHead>
+                          <TableHead className="font-medium">Email Comercial</TableHead>
+                          <TableHead className="font-medium text-right">Acciones</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -300,7 +306,7 @@ const SupplierList = () => {
                   <div className="flex items-center justify-center h-64">
                     <div className="flex flex-col items-center space-y-2">
                       <div className="w-8 h-8 border-4 rounded-full border-t-zinc-900 dark:border-t-zinc-100 border-zinc-200 dark:border-zinc-700 animate-spin"></div>
-                      <p className="text-zinc-500 dark:text-zinc-400">Loading suppliers...</p>
+                      <p className="text-zinc-500 dark:text-zinc-400">Cargando proveedores...</p>
                     </div>
                   </div>
                 ) : filteredSuppliers.length === 0 ? (
@@ -308,19 +314,23 @@ const SupplierList = () => {
                     <div className="p-3 mb-4 rounded-full bg-zinc-100 dark:bg-zinc-700">
                       <Building className="w-8 h-8 text-zinc-500 dark:text-zinc-400" />
                     </div>
-                    <h3 className="mb-1 text-xl font-medium text-zinc-900 dark:text-zinc-100">No suppliers found</h3>
+                    <h3 className="mb-1 text-xl font-medium text-zinc-900 dark:text-zinc-100">
+                      No se encontraron proveedores
+                    </h3>
                     <p className="mb-4 text-zinc-500 dark:text-zinc-400">
-                      {searchTerm ? "Try a different search term" : "Add your first supplier to get started"}
+                      {searchTerm
+                        ? "Intenta con un término de búsqueda diferente"
+                        : "Agrega tu primer proveedor para comenzar"}
                     </p>
                     {searchTerm ? (
                       <Button variant="outline" onClick={() => setSearchTerm("")}>
-                        Clear Search
+                        Limpiar Búsqueda
                       </Button>
                     ) : (
                       <Link to="/suppliers/create">
                         <Button>
                           <Plus className="w-4 h-4 mr-2" />
-                          Add New Supplier
+                          Agregar Nuevo Proveedor
                         </Button>
                       </Link>
                     )}
@@ -340,7 +350,7 @@ const SupplierList = () => {
                               {supplier.companyName}
                             </CardTitle>
                             <CardDescription className="text-zinc-500 dark:text-zinc-400">
-                              {supplier.name || "No contact name"}
+                              {supplier.name || "Sin nombre de contacto"}
                             </CardDescription>
                           </CardHeader>
                           <CardContent className="p-4 pt-2">
@@ -348,13 +358,13 @@ const SupplierList = () => {
                               <div className="flex items-center">
                                 <Phone className="w-4 h-4 mr-2 text-zinc-400" />
                                 <span className="text-sm text-zinc-600 dark:text-zinc-300">
-                                  {supplier.businessPhone || "No phone number"}
+                                  {supplier.businessPhone || "Sin número de teléfono"}
                                 </span>
                               </div>
                               <div className="flex items-center">
                                 <Mail className="w-4 h-4 mr-2 text-zinc-400" />
                                 <span className="text-sm text-zinc-600 dark:text-zinc-300">
-                                  {supplier.businessEmail || "No email address"}
+                                  {supplier.businessEmail || "Sin dirección de email"}
                                 </span>
                               </div>
                               <div className="flex justify-end pt-2 mt-4 space-x-2 border-t">
@@ -365,7 +375,7 @@ const SupplierList = () => {
                                   className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                                 >
                                   <Eye className="w-4 h-4 mr-1" />
-                                  View
+                                  Ver
                                 </Button>
                                 <Link to={`/suppliers/edit/${supplier._id}`}>
                                   <Button
@@ -374,7 +384,7 @@ const SupplierList = () => {
                                     className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                                   >
                                     <Edit className="w-4 h-4 mr-1" />
-                                    Edit
+                                    Editar
                                   </Button>
                                 </Link>
                                 <Button
@@ -384,7 +394,7 @@ const SupplierList = () => {
                                   className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                                 >
                                   <Trash2 className="w-4 h-4 mr-1" />
-                                  Delete
+                                  Eliminar
                                 </Button>
                               </div>
                             </div>
@@ -400,7 +410,6 @@ const SupplierList = () => {
         </Card>
       </div>
 
-      {/* Supplier Details Dialog */}
       <Dialog open={selectedSupplier !== null} onOpenChange={(open) => !open && setSelectedSupplier(null)}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
@@ -408,7 +417,7 @@ const SupplierList = () => {
               {selectedSupplier?.companyName}
             </DialogTitle>
             <DialogDescription className="text-zinc-500 dark:text-zinc-400">
-              Supplier details and contact information
+              Detalles del proveedor e información de contacto
             </DialogDescription>
           </DialogHeader>
 
@@ -416,27 +425,29 @@ const SupplierList = () => {
             <div className="grid grid-cols-1 gap-6 mt-4 md:grid-cols-2">
               <div className="space-y-4">
                 <div>
-                  <h3 className="mb-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">Company Information</h3>
+                  <h3 className="mb-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                    Información de la Empresa
+                  </h3>
                   <Card className="overflow-hidden">
                     <CardContent className="p-4 space-y-3">
                       <DetailItem
                         icon={<Building className="w-4 h-4" />}
-                        label="Company Name"
+                        label="Nombre de la Empresa"
                         value={selectedSupplier.companyName}
                       />
                       <DetailItem
                         icon={<User className="w-4 h-4" />}
-                        label="Contact Name"
+                        label="Nombre del Contacto"
                         value={selectedSupplier.name}
                       />
                       <DetailItem
                         icon={<Phone className="w-4 h-4" />}
-                        label="Business Phone"
+                        label="Teléfono Comercial"
                         value={selectedSupplier.businessPhone}
                       />
                       <DetailItem
                         icon={<Mail className="w-4 h-4" />}
-                        label="Business Email"
+                        label="Email Comercial"
                         value={selectedSupplier.businessEmail}
                       />
                     </CardContent>
@@ -444,17 +455,17 @@ const SupplierList = () => {
                 </div>
 
                 <div>
-                  <h3 className="mb-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">Commercial Information</h3>
+                  <h3 className="mb-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">Información Comercial</h3>
                   <Card className="overflow-hidden">
                     <CardContent className="p-4 space-y-3">
                       <DetailItem
                         icon={<User className="w-4 h-4" />}
-                        label="Commercial Contact"
+                        label="Contacto Comercial"
                         value={selectedSupplier.commercialContact}
                       />
                       <DetailItem
                         icon={<User className="w-4 h-4" />}
-                        label="Company Contact"
+                        label="Contacto de la Empresa"
                         value={selectedSupplier.companyContact}
                       />
                     </CardContent>
@@ -464,32 +475,32 @@ const SupplierList = () => {
 
               <div className="space-y-4">
                 <div>
-                  <h3 className="mb-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">Technical Information</h3>
+                  <h3 className="mb-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">Información Técnica</h3>
                   <Card className="overflow-hidden">
                     <CardContent className="p-4 space-y-3">
                       <DetailItem
                         icon={<User className="w-4 h-4" />}
-                        label="Technical Contact"
+                        label="Contacto Técnico"
                         value={selectedSupplier.technicalContact}
                       />
                       <DetailItem
                         icon={<Phone className="w-4 h-4" />}
-                        label="Office Phone"
+                        label="Teléfono de Oficina"
                         value={selectedSupplier.officePhone}
                       />
                       <DetailItem
                         icon={<Phone className="w-4 h-4" />}
-                        label="Technical Phone"
+                        label="Teléfono Técnico"
                         value={selectedSupplier.technicalPhone}
                       />
                       <DetailItem
                         icon={<Mail className="w-4 h-4" />}
-                        label="Company Email"
+                        label="Email de la Empresa"
                         value={selectedSupplier.companyEmail}
                       />
                       <DetailItem
                         icon={<Mail className="w-4 h-4" />}
-                        label="Technical Email"
+                        label="Email Técnico"
                         value={selectedSupplier.technicalEmail}
                       />
                     </CardContent>
@@ -503,41 +514,40 @@ const SupplierList = () => {
             <Link to={`/suppliers/edit/${selectedSupplier?._id}`}>
               <Button variant="outline">
                 <Edit className="w-4 h-4 mr-2" />
-                Edit Supplier
+                Editar Proveedor
               </Button>
             </Link>
-            <Button onClick={() => setSelectedSupplier(null)}>Close</Button>
+            <Button onClick={() => setSelectedSupplier(null)}>Cerrar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center text-red-600 dark:text-red-400">
               <AlertTriangle className="w-5 h-5 mr-2" />
-              Confirm Deletion
+              Confirmar Eliminación
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the supplier "{supplierToDelete?.companyName}"? This action cannot be
-              undone.
+              ¿Estás seguro de que quieres eliminar el proveedor "{supplierToDelete?.companyName}"? Esta acción no se
+              puede deshacer.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:justify-between">
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
-              Cancel
+              Cancelar
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
               {isDeleting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Deleting...
+                  Eliminando...
                 </>
               ) : (
                 <>
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Supplier
+                  Eliminar Proveedor
                 </>
               )}
             </Button>

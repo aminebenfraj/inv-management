@@ -7,39 +7,39 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, Edit, Loader2, Plus } from 'lucide-react'
+import { ArrowLeft, Edit, Loader2, Plus } from "lucide-react"
 import MainLayout from "@/components/MainLayout"
 
 function ShowTableStatus() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  const [isLoading, setIsLoading] = useState(true);
-  const [tableStatuses, setTableStatuses] = useState([]);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate()
+  const { toast } = useToast()
+
+  const [isLoading, setIsLoading] = useState(true)
+  const [tableStatuses, setTableStatuses] = useState([])
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchTableStatuses = async () => {
       try {
-        console.log("Fetching all table statuses");
-        const data = await getAllTableStatuses();
-        
+        console.log("Obteniendo todos los estados de tabla")
+        const data = await getAllTableStatuses()
+
         if (!data || !Array.isArray(data)) {
-          setError("No table statuses found or invalid data format");
+          setError("No se encontraron estados de tabla o formato de datos inválido")
         } else {
-          console.log("Table statuses data:", data);
-          setTableStatuses(data);
+          console.log("Datos de estados de tabla:", data)
+          setTableStatuses(data)
         }
       } catch (error) {
-        console.error("Error fetching table statuses:", error);
-        setError(error.message || "Failed to load table statuses data");
+        console.error("Error al obtener estados de tabla:", error)
+        setError(error.message || "Error al cargar los datos de estados de tabla")
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchTableStatuses();
-  }, [toast]);
+    fetchTableStatuses()
+  }, [toast])
 
   if (isLoading) {
     return (
@@ -48,7 +48,7 @@ function ShowTableStatus() {
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       </MainLayout>
-    );
+    )
   }
 
   if (error) {
@@ -66,12 +66,12 @@ function ShowTableStatus() {
           </div>
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-6">
-              <p>Unable to load table statuses. Please try again.</p>
+              <p>No se pueden cargar los estados de tabla. Por favor, inténtalo de nuevo.</p>
             </CardContent>
           </Card>
         </div>
       </MainLayout>
-    );
+    )
   }
 
   return (
@@ -88,47 +88,49 @@ function ShowTableStatus() {
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Table Statuses</h1>
-              <p className="text-muted-foreground">View and manage all table statuses</p>
+              <h1 className="text-3xl font-bold tracking-tight">Estados de Tabla</h1>
+              <p className="text-muted-foreground">Ver y gestionar todos los estados de tabla</p>
             </div>
           </div>
           <Button onClick={() => navigate("/tablestatus/create")}>
             <Plus className="w-4 h-4 mr-2" />
-            Add New Status
+            Agregar Nuevo Estado
           </Button>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>All Table Statuses</CardTitle>
-            <CardDescription>List of all available table statuses ordered by display order</CardDescription>
+            <CardTitle>Todos los Estados de Tabla</CardTitle>
+            <CardDescription>
+              Lista de todos los estados de tabla disponibles ordenados por orden de visualización
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {tableStatuses.length === 0 ? (
               <div className="py-6 text-center">
-                <p className="text-muted-foreground">No table statuses found. Create your first one!</p>
+                <p className="text-muted-foreground">No se encontraron estados de tabla. ¡Crea el primero!</p>
                 <Button className="mt-4" onClick={() => navigate("/table-status/create")}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Table Status
+                  Crear Estado de Tabla
                 </Button>
               </div>
             ) : (
               <div className="grid gap-4">
                 {tableStatuses.map((status) => (
-                  <div 
-                    key={status._id} 
+                  <div
+                    key={status._id}
                     className="flex items-center justify-between p-4 transition-colors border rounded-lg hover:bg-accent/50"
                   >
                     <div className="flex items-center space-x-4">
                       <div className="w-4 h-4 rounded-full" style={{ backgroundColor: status.color }}></div>
                       <div>
                         <h3 className="font-medium">{status.name}</h3>
-                        <p className="text-sm text-muted-foreground">Order: {status.order}</p>
+                        <p className="text-sm text-muted-foreground">Orden: {status.order}</p>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/tablestatus/edit/${status._id}`)}>
                       <Edit className="w-4 h-4 mr-2" />
-                      Edit
+                      Editar
                     </Button>
                   </div>
                 ))}
@@ -138,7 +140,7 @@ function ShowTableStatus() {
         </Card>
       </motion.div>
     </MainLayout>
-  );
+  )
 }
 
-export default ShowTableStatus;
+export default ShowTableStatus

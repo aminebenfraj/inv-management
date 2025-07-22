@@ -40,7 +40,7 @@ import {
 import MainLayout from "@/components/MainLayout"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-// Animation variants
+// Variantes de animación
 const fadeIn = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.5 } },
@@ -77,36 +77,36 @@ const MaterialMachineList = () => {
     }
   }, [searchTerm, allocations, factoryFilter])
 
- const fetchAllocations = async () => {
+  const fetchAllocations = async () => {
     try {
       setLoading(true)
       setError(null)
       const response = await getAllAllocations()
 
-      console.log("API Response:", response) // Debug log
+      console.log("Respuesta de la API:", response) // Log de depuración
 
-      // Handle paginated response structure
+      // Manejar estructura de respuesta paginada
       let allocationsData = []
       if (response && response.data && Array.isArray(response.data)) {
-        // Paginated response format
+        // Formato de respuesta paginada
         allocationsData = response.data
-        console.log("Using paginated data:", allocationsData.length, "items") // Debug log
+        console.log("Usando datos paginados:", allocationsData.length, "elementos") // Log de depuración
       } else if (Array.isArray(response)) {
-        // Direct array response format
+        // Formato de respuesta de array directo
         allocationsData = response
-        console.log("Using direct array data:", allocationsData.length, "items") // Debug log
+        console.log("Usando datos de array directo:", allocationsData.length, "elementos") // Log de depuración
       } else {
-        console.log("Unexpected response format:", typeof response, response) // Debug log
+        console.log("Formato de respuesta inesperado:", typeof response, response) // Log de depuración
       }
 
       setAllocations(allocationsData)
       setFilteredAllocations(allocationsData)
     } catch (error) {
-      console.error("Error fetching allocations:", error)
-      setError("Failed to fetch allocations. Please try again.")
+      console.error("Error al obtener asignaciones:", error)
+      setError("Error al obtener las asignaciones. Por favor, inténtalo de nuevo.")
       toast({
         title: "Error",
-        description: "Failed to fetch allocations",
+        description: "Error al obtener las asignaciones",
         variant: "destructive",
       })
     } finally {
@@ -119,10 +119,10 @@ const MaterialMachineList = () => {
       const data = await getAllFactories()
       setFactories(Array.isArray(data) ? data : [])
     } catch (error) {
-      console.error("Error fetching factories:", error)
+      console.error("Error al obtener fábricas:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch factories",
+        description: "Error al obtener las fábricas",
         variant: "destructive",
       })
     }
@@ -170,14 +170,14 @@ const MaterialMachineList = () => {
       await deleteAllocation(allocationToDelete._id)
       setAllocations(allocations.filter((allocation) => allocation._id !== allocationToDelete._id))
       toast({
-        title: "Success",
-        description: "Allocation deleted successfully",
+        title: "Éxito",
+        description: "Asignación eliminada exitosamente",
       })
     } catch (error) {
-      console.error("Error deleting allocation:", error)
+      console.error("Error al eliminar asignación:", error)
       toast({
         title: "Error",
-        description: "Failed to delete allocation",
+        description: "Error al eliminar la asignación",
         variant: "destructive",
       })
     } finally {
@@ -190,15 +190,15 @@ const MaterialMachineList = () => {
     setFactoryFilter("all")
     setSearchTerm("")
     toast({
-      title: "Filters cleared",
-      description: "All filters have been reset",
+      title: "Filtros limpiados",
+      description: "Todos los filtros han sido restablecidos",
     })
   }
 
   const getSelectedFactoryName = () => {
-    if (factoryFilter === "all") return "All Factories"
+    if (factoryFilter === "all") return "Todas las Fábricas"
     const factory = factories.find((f) => f._id === factoryFilter)
-    return factory ? factory.name : "Unknown Factory"
+    return factory ? factory.name : "Fábrica Desconocida"
   }
 
   return (
@@ -206,19 +206,19 @@ const MaterialMachineList = () => {
       <motion.div className="container py-6 mx-auto" initial="hidden" animate="visible" variants={fadeIn}>
         <div className="flex flex-col mb-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Material-Machine Allocations</h1>
+            <h1 className="text-2xl font-bold">Asignaciones Material-Máquina</h1>
             <p className="text-muted-foreground">
-              View and manage material stock allocations to machines
+              Ver y gestionar las asignaciones de stock de materiales a máquinas
               {factoryFilter !== "all" && (
                 <span className="ml-2">
-                  • Filtered by: <span className="font-medium">{getSelectedFactoryName()}</span>
+                  • Filtrado por: <span className="font-medium">{getSelectedFactoryName()}</span>
                 </span>
               )}
             </p>
           </div>
           <Button onClick={() => navigate("/machinematerial/create")} className="mt-4 md:mt-0">
             <Plus className="w-4 h-4 mr-2" />
-            New Allocation
+            Nueva Asignación
           </Button>
         </div>
 
@@ -235,12 +235,12 @@ const MaterialMachineList = () => {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Filter className="w-5 h-5" />
-                Filters
+                Filtros
               </CardTitle>
               {(factoryFilter !== "all" || searchTerm) && (
                 <Button variant="outline" size="sm" onClick={clearFilters}>
                   <X className="w-4 h-4 mr-2" />
-                  Clear Filters
+                  Limpiar Filtros
                 </Button>
               )}
             </div>
@@ -250,7 +250,7 @@ const MaterialMachineList = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by material, machine, or factory..."
+                  placeholder="Buscar por material, máquina o fábrica..."
                   className="pl-8"
                   value={searchTerm}
                   onChange={handleSearchChange}
@@ -259,13 +259,13 @@ const MaterialMachineList = () => {
               <div className="flex items-center gap-2">
                 <Select value={factoryFilter} onValueChange={setFactoryFilter}>
                   <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Filter by factory" />
+                    <SelectValue placeholder="Filtrar por fábrica" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4" />
-                        All Factories
+                        Todas las Fábricas
                       </div>
                     </SelectItem>
                     {factories.map((factory) => (
@@ -288,21 +288,21 @@ const MaterialMachineList = () => {
             {loading ? (
               <div className="flex items-center justify-center py-24">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <span className="ml-2 text-lg">Loading allocations...</span>
+                <span className="ml-2 text-lg">Cargando asignaciones...</span>
               </div>
             ) : filteredAllocations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 <FileText className="w-12 h-12 mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium">No allocations found</h3>
+                <h3 className="text-lg font-medium">No se encontraron asignaciones</h3>
                 <p className="mt-1 mb-4 text-muted-foreground">
                   {searchTerm || factoryFilter !== "all"
-                    ? "Try adjusting your search or filters"
-                    : "Create your first allocation to get started"}
+                    ? "Intenta ajustar tu búsqueda o filtros"
+                    : "Crea tu primera asignación para comenzar"}
                 </p>
                 {!searchTerm && factoryFilter === "all" && (
                   <Button onClick={() => navigate("/machinematerial/create")}>
                     <Plus className="w-4 h-4 mr-2" />
-                    New Allocation
+                    Nueva Asignación
                   </Button>
                 )}
               </div>
@@ -312,11 +312,11 @@ const MaterialMachineList = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Material</TableHead>
-                      <TableHead>Machine</TableHead>
-                      <TableHead>Factory</TableHead>
-                      <TableHead className="text-right">Allocated Stock</TableHead>
-                      <TableHead className="text-right">Last Updated</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>Máquina</TableHead>
+                      <TableHead>Fábrica</TableHead>
+                      <TableHead className="text-right">Stock Asignado</TableHead>
+                      <TableHead className="text-right">Última Actualización</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -337,13 +337,19 @@ const MaterialMachineList = () => {
                           <TableCell>
                             <div className="font-medium">{allocation.machine?.name}</div>
                             <Badge variant={allocation.machine?.status === "active" ? "outline" : "secondary"}>
-                              {allocation.machine?.status}
+                              {allocation.machine?.status === "active"
+                                ? "activo"
+                                : allocation.machine?.status === "maintenance"
+                                  ? "mantenimiento"
+                                  : allocation.machine?.status === "inactive"
+                                    ? "inactivo"
+                                    : allocation.machine?.status}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Building2 className="w-4 h-4 text-muted-foreground" />
-                              <span className="font-medium">{allocation.machine?.factory?.name || "No Factory"}</span>
+                              <span className="font-medium">{allocation.machine?.factory?.name || "Sin Fábrica"}</span>
                             </div>
                           </TableCell>
                           <TableCell className="font-medium text-right">{allocation.allocatedStock}</TableCell>
@@ -355,24 +361,24 @@ const MaterialMachineList = () => {
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">
                                   <MoreHorizontal className="w-4 h-4" />
-                                  <span className="sr-only">Actions</span>
+                                  <span className="sr-only">Acciones</span>
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => navigate(`/machinematerial/detail/${allocation._id}`)}>
                                   <Eye className="w-4 h-4 mr-2" />
-                                  View Details
+                                  Ver Detalles
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => navigate(`/machinematerial/edit/${allocation._id}`)}>
                                   <Edit className="w-4 h-4 mr-2" />
-                                  Edit
+                                  Editar
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => confirmDelete(allocation)}
                                   className="text-red-600 focus:text-red-600"
                                 >
                                   <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete
+                                  Eliminar
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -387,22 +393,22 @@ const MaterialMachineList = () => {
           </CardContent>
         </Card>
 
-        {/* Delete Confirmation Dialog */}
+        {/* Diálogo de Confirmación de Eliminación */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete the allocation between
-                <span className="font-semibold"> {allocationToDelete?.material?.reference}</span> and
-                <span className="font-semibold"> {allocationToDelete?.machine?.name}</span>. This action cannot be
-                undone.
+                Esto eliminará permanentemente la asignación entre
+                <span className="font-semibold"> {allocationToDelete?.material?.reference}</span> y
+                <span className="font-semibold"> {allocationToDelete?.machine?.name}</span>. Esta acción no se puede
+                deshacer.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
               <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-                Delete
+                Eliminar
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

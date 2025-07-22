@@ -65,17 +65,17 @@ const CreateSupplier = () => {
     try {
       await createSupplier(supplier)
       toast({
-        title: "Success",
-        description: "Supplier created successfully!",
+        title: "Éxito",
+        description: "¡Proveedor creado exitosamente!",
       })
       setTimeout(() => navigate("/suppliers"), 1500)
     } catch (error) {
-      console.error("Failed to create supplier:", error)
-      setError("Failed to create supplier. Please try again.")
+      console.error("Error al crear proveedor:", error)
+      setError("Error al crear proveedor. Por favor, inténtalo de nuevo.")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create supplier. Please try again.",
+        description: "Error al crear proveedor. Por favor, inténtalo de nuevo.",
       })
       setIsSubmitting(false)
     }
@@ -89,10 +89,10 @@ const CreateSupplier = () => {
           <CardHeader className="bg-gradient-to-r from-zinc-50 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900">
             <CardTitle className="flex items-center text-xl font-semibold text-zinc-900 dark:text-zinc-100">
               <Building className="w-5 h-5 mr-2 text-zinc-500 dark:text-zinc-400" />
-              New Supplier
+              Nuevo Proveedor
             </CardTitle>
             <CardDescription className="text-zinc-500 dark:text-zinc-400">
-              Fill in the form below to create a new supplier
+              Completa el formulario a continuación para crear un nuevo proveedor
             </CardDescription>
           </CardHeader>
 
@@ -114,19 +114,19 @@ const CreateSupplier = () => {
                     value="company"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-zinc-900 dark:data-[state=active]:border-zinc-100 rounded-none px-4 py-3 data-[state=active]:shadow-none"
                   >
-                    Company Info
+                    Información de la Empresa
                   </TabsTrigger>
                   <TabsTrigger
                     value="contacts"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-zinc-900 dark:data-[state=active]:border-zinc-100 rounded-none px-4 py-3 data-[state=active]:shadow-none"
                   >
-                    Contact Details
+                    Detalles de Contacto
                   </TabsTrigger>
                   <TabsTrigger
                     value="technical"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-zinc-900 dark:data-[state=active]:border-zinc-100 rounded-none px-4 py-3 data-[state=active]:shadow-none"
                   >
-                    Technical Info
+                    Información Técnica
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -142,7 +142,7 @@ const CreateSupplier = () => {
                   <motion.div variants={formVariants} initial="hidden" animate="visible" className="space-y-6">
                     <motion.div variants={formItemVariants} className="space-y-2">
                       <Label htmlFor="companyName" className="text-zinc-700 dark:text-zinc-300">
-                        Company Name <span className="text-red-500">*</span>
+                        Nombre de la Empresa <span className="text-red-500">*</span>
                       </Label>
                       <div className="relative">
                         <Building className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -153,14 +153,14 @@ const CreateSupplier = () => {
                           onChange={handleChange}
                           required
                           className="pl-10"
-                          placeholder="Enter company name"
+                          placeholder="Ingresa el nombre de la empresa"
                         />
                       </div>
                     </motion.div>
 
                     <motion.div variants={formItemVariants} className="space-y-2">
                       <Label htmlFor="name" className="text-zinc-700 dark:text-zinc-300">
-                        Primary Contact Name
+                        Nombre del Contacto Principal
                       </Label>
                       <div className="relative">
                         <User className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -170,7 +170,7 @@ const CreateSupplier = () => {
                           value={supplier.name}
                           onChange={handleChange}
                           className="pl-10"
-                          placeholder="Enter primary contact name"
+                          placeholder="Ingresa el nombre del contacto principal"
                         />
                       </div>
                     </motion.div>
@@ -178,7 +178,7 @@ const CreateSupplier = () => {
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <motion.div variants={formItemVariants} className="space-y-2">
                         <Label htmlFor="businessPhone" className="text-zinc-700 dark:text-zinc-300">
-                          Business Phone
+                          Teléfono Comercial
                         </Label>
                         <div className="relative">
                           <Phone className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -188,14 +188,14 @@ const CreateSupplier = () => {
                             value={supplier.businessPhone}
                             onChange={handleChange}
                             className="pl-10"
-                            placeholder="Enter business phone"
+                            placeholder="Ingresa el teléfono comercial"
                           />
                         </div>
                       </motion.div>
 
                       <motion.div variants={formItemVariants} className="space-y-2">
                         <Label htmlFor="businessEmail" className="text-zinc-700 dark:text-zinc-300">
-                          Business Email
+                          Email Comercial
                         </Label>
                         <div className="relative">
                           <Mail className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -206,7 +206,7 @@ const CreateSupplier = () => {
                             value={supplier.businessEmail}
                             onChange={handleChange}
                             className="pl-10"
-                            placeholder="Enter business email"
+                            placeholder="Ingresa el email comercial"
                           />
                         </div>
                       </motion.div>
@@ -218,7 +218,7 @@ const CreateSupplier = () => {
                         onClick={() => setActiveTab("contacts")}
                         className="w-full md:w-auto bg-zinc-100 text-zinc-800 hover:bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600"
                       >
-                        Next: Contact Details
+                        Siguiente: Detalles de Contacto
                       </Button>
                     </motion.div>
                   </motion.div>
@@ -228,7 +228,7 @@ const CreateSupplier = () => {
                   <motion.div variants={formVariants} initial="hidden" animate="visible" className="space-y-6">
                     <motion.div variants={formItemVariants} className="space-y-2">
                       <Label htmlFor="commercialContact" className="text-zinc-700 dark:text-zinc-300">
-                        Commercial Contact
+                        Contacto Comercial
                       </Label>
                       <div className="relative">
                         <User className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -238,14 +238,14 @@ const CreateSupplier = () => {
                           value={supplier.commercialContact}
                           onChange={handleChange}
                           className="pl-10"
-                          placeholder="Enter commercial contact name"
+                          placeholder="Ingresa el nombre del contacto comercial"
                         />
                       </div>
                     </motion.div>
 
                     <motion.div variants={formItemVariants} className="space-y-2">
                       <Label htmlFor="companyContact" className="text-zinc-700 dark:text-zinc-300">
-                        Company Contact
+                        Contacto de la Empresa
                       </Label>
                       <div className="relative">
                         <User className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -255,7 +255,7 @@ const CreateSupplier = () => {
                           value={supplier.companyContact}
                           onChange={handleChange}
                           className="pl-10"
-                          placeholder="Enter company contact name"
+                          placeholder="Ingresa el nombre del contacto de la empresa"
                         />
                       </div>
                     </motion.div>
@@ -265,7 +265,7 @@ const CreateSupplier = () => {
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <motion.div variants={formItemVariants} className="space-y-2">
                         <Label htmlFor="officePhone" className="text-zinc-700 dark:text-zinc-300">
-                          Office Phone
+                          Teléfono de Oficina
                         </Label>
                         <div className="relative">
                           <Phone className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -275,14 +275,14 @@ const CreateSupplier = () => {
                             value={supplier.officePhone}
                             onChange={handleChange}
                             className="pl-10"
-                            placeholder="Enter office phone"
+                            placeholder="Ingresa el teléfono de oficina"
                           />
                         </div>
                       </motion.div>
 
                       <motion.div variants={formItemVariants} className="space-y-2">
                         <Label htmlFor="companyEmail" className="text-zinc-700 dark:text-zinc-300">
-                          Company Email
+                          Email de la Empresa
                         </Label>
                         <div className="relative">
                           <Mail className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -293,7 +293,7 @@ const CreateSupplier = () => {
                             value={supplier.companyEmail}
                             onChange={handleChange}
                             className="pl-10"
-                            placeholder="Enter company email"
+                            placeholder="Ingresa el email de la empresa"
                           />
                         </div>
                       </motion.div>
@@ -306,14 +306,14 @@ const CreateSupplier = () => {
                         variant="outline"
                         className="border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
                       >
-                        Previous
+                        Anterior
                       </Button>
                       <Button
                         type="button"
                         onClick={() => setActiveTab("technical")}
                         className="bg-zinc-100 text-zinc-800 hover:bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600"
                       >
-                        Next: Technical Info
+                        Siguiente: Información Técnica
                       </Button>
                     </motion.div>
                   </motion.div>
@@ -323,7 +323,7 @@ const CreateSupplier = () => {
                   <motion.div variants={formVariants} initial="hidden" animate="visible" className="space-y-6">
                     <motion.div variants={formItemVariants} className="space-y-2">
                       <Label htmlFor="technicalContact" className="text-zinc-700 dark:text-zinc-300">
-                        Technical Contact
+                        Contacto Técnico
                       </Label>
                       <div className="relative">
                         <User className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -333,7 +333,7 @@ const CreateSupplier = () => {
                           value={supplier.technicalContact}
                           onChange={handleChange}
                           className="pl-10"
-                          placeholder="Enter technical contact name"
+                          placeholder="Ingresa el nombre del contacto técnico"
                         />
                       </div>
                     </motion.div>
@@ -341,7 +341,7 @@ const CreateSupplier = () => {
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <motion.div variants={formItemVariants} className="space-y-2">
                         <Label htmlFor="technicalPhone" className="text-zinc-700 dark:text-zinc-300">
-                          Technical Phone
+                          Teléfono Técnico
                         </Label>
                         <div className="relative">
                           <Phone className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -351,14 +351,14 @@ const CreateSupplier = () => {
                             value={supplier.technicalPhone}
                             onChange={handleChange}
                             className="pl-10"
-                            placeholder="Enter technical phone"
+                            placeholder="Ingresa el teléfono técnico"
                           />
                         </div>
                       </motion.div>
 
                       <motion.div variants={formItemVariants} className="space-y-2">
                         <Label htmlFor="technicalEmail" className="text-zinc-700 dark:text-zinc-300">
-                          Technical Email
+                          Email Técnico
                         </Label>
                         <div className="relative">
                           <Mail className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-zinc-400" />
@@ -369,7 +369,7 @@ const CreateSupplier = () => {
                             value={supplier.technicalEmail}
                             onChange={handleChange}
                             className="pl-10"
-                            placeholder="Enter technical email"
+                            placeholder="Ingresa el email técnico"
                           />
                         </div>
                       </motion.div>
@@ -382,7 +382,7 @@ const CreateSupplier = () => {
                         variant="outline"
                         className="border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
                       >
-                        Previous
+                        Anterior
                       </Button>
                     </motion.div>
                   </motion.div>
@@ -397,7 +397,7 @@ const CreateSupplier = () => {
                 onClick={() => navigate("/suppliers")}
                 className="border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
               >
-                Cancel
+                Cancelar
               </Button>
               <Button
                 type="submit"
@@ -407,12 +407,12 @@ const CreateSupplier = () => {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating...
+                    Creando...
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Create Supplier
+                    Crear Proveedor
                   </>
                 )}
               </Button>

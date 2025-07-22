@@ -55,7 +55,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { DatePicker } from "../../components/ui/date-picker"
 
-// Animation variants
+// Variantes de animación
 const fadeIn = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.5 } },
@@ -114,7 +114,7 @@ const PedidoList = () => {
     order: -1,
   })
 
-  // Debounce search to avoid too many requests
+  // Debounce de búsqueda para evitar demasiadas solicitudes
   const [debouncedSearch, setDebouncedSearch] = useState("")
 
   useEffect(() => {
@@ -125,27 +125,27 @@ const PedidoList = () => {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  // Load filter options on component mount
+  // Cargar opciones de filtro al montar el componente
   const loadFilterOptions = useCallback(async () => {
     try {
       const options = {}
       const fields = ["tipo", "fabricante", "proveedor", "solicitante", "recepcionado", "pedir", "ano", "table_status"]
 
-      // Use Promise.all for parallel requests
+      // Usar Promise.all para solicitudes paralelas
       const results = await Promise.all(fields.map((field) => getFilterOptions(field)))
 
-      // Map results to their respective fields
+      // Mapear resultados a sus respectivos campos
       fields.forEach((field, index) => {
         options[field] = results[index]
       })
 
       setFilterOptions(options)
     } catch (error) {
-      console.error("Error loading filter options:", error)
+      console.error("Error al cargar opciones de filtro:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load filter options",
+        description: "Error al cargar las opciones de filtro",
       })
     }
   }, [toast])
@@ -155,7 +155,7 @@ const PedidoList = () => {
   }, [loadFilterOptions])
 
   const handleFilterChange = (field, value) => {
-    // If value is "all", set to empty string for any field
+    // Si el valor es "all", establecer como cadena vacía para cualquier campo
     if (value === "all") {
       setFilters((prev) => ({
         ...prev,
@@ -164,7 +164,7 @@ const PedidoList = () => {
       return
     }
 
-    // For all other fields
+    // Para todos los demás campos
     setFilters((prev) => ({
       ...prev,
       [field]: value,
@@ -176,10 +176,10 @@ const PedidoList = () => {
       setIsLoading(true)
       setError(null)
 
-      // Create a clean copy of filters for API
+      // Crear una copia limpia de filtros para la API
       const apiFilters = {}
 
-      // Process each filter and only add non-empty values
+      // Procesar cada filtro y solo agregar valores no vacíos
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== "" && value !== null) {
           apiFilters[key] = value
@@ -198,27 +198,27 @@ const PedidoList = () => {
           totalPages: response.totalPages || 0,
         })
       } else {
-        setError("Invalid data received from server.")
+        setError("Datos inválidos recibidos del servidor.")
       }
     } catch (error) {
-      console.error("Error fetching pedidos:", error)
-      setError("Failed to load orders. Please try again later.")
+      console.error("Error al obtener pedidos:", error)
+      setError("Error al cargar los pedidos. Por favor, inténtalo de nuevo más tarde.")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load orders. Please try again later.",
+        description: "Error al cargar los pedidos. Por favor, inténtalo de nuevo más tarde.",
       })
     } finally {
       setIsLoading(false)
     }
   }, [pagination.page, pagination.limit, debouncedSearch, filters, sortConfig, toast])
 
-  // Fetch pedidos when pagination, search, filters change
+  // Obtener pedidos cuando cambian paginación, búsqueda, filtros
   useEffect(() => {
     fetchPedidos()
   }, [fetchPedidos])
 
-  // Reset to page 1 when filters change
+  // Resetear a página 1 cuando cambian los filtros
   useEffect(() => {
     setPagination((prev) => ({ ...prev, page: 1 }))
   }, [filters, debouncedSearch])
@@ -230,10 +230,10 @@ const PedidoList = () => {
   const handleSortChange = (field) => {
     setSortConfig((prev) => {
       if (prev.field === field) {
-        // Toggle order if same field
+        // Alternar orden si es el mismo campo
         return { field, order: prev.order === 1 ? -1 : 1 }
       }
-      // Default to descending for new field
+      // Por defecto descendente para nuevo campo
       return { field, order: -1 }
     })
   }
@@ -250,15 +250,15 @@ const PedidoList = () => {
       await deletePedido(pedidoToDelete._id)
       setPedidos(pedidos.filter((pedido) => pedido._id !== pedidoToDelete._id))
       toast({
-        title: "Success",
-        description: "Order deleted successfully",
+        title: "Éxito",
+        description: "Pedido eliminado exitosamente",
       })
     } catch (error) {
-      console.error("Error deleting order:", error)
+      console.error("Error al eliminar el pedido:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete order. Please try again.",
+        description: "Error al eliminar el pedido. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setDeleteDialogOpen(false)
@@ -293,22 +293,22 @@ const PedidoList = () => {
   const getStatusDetails = (status) => {
     const statusMap = {
       pending: {
-        label: "Pending",
+        label: "Pendiente",
         icon: Clock,
         className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
       },
       in_progress: {
-        label: "In Progress",
+        label: "En Progreso",
         icon: Package,
         className: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
       },
       completed: {
-        label: "Completed",
+        label: "Completado",
         icon: CheckCircle,
         className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
       },
       cancelled: {
-        label: "Cancelled",
+        label: "Cancelado",
         icon: AlertCircle,
         className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
       },
@@ -329,14 +329,14 @@ const PedidoList = () => {
     }).format(amount)
   }
 
-  // Helper function to safely extract property values from objects
+  // Función auxiliar para extraer valores de propiedades de objetos de forma segura
   const getPropertyValue = (obj, property) => {
     if (!obj) return "N/A"
 
-    // If the object is already a string, return it
+    // Si el objeto ya es una cadena, devolverla
     if (typeof obj === "string") return obj
 
-    // If it's an object with a name property, return the name
+    // Si es un objeto con una propiedad name, devolver el name
     if (typeof obj === "object" && obj !== null) {
       if (obj.name) return obj.name
       if (obj.reference) return obj.reference
@@ -346,7 +346,7 @@ const PedidoList = () => {
     return "N/A"
   }
 
-  // Count active filters
+  // Contar filtros activos
   const activeFilterCount = Object.values(filters).filter((value) => value !== "" && value !== null).length
 
   return (
@@ -354,12 +354,12 @@ const PedidoList = () => {
       <motion.div className="container py-6 mx-auto" initial="hidden" animate="visible" variants={fadeIn}>
         <div className="flex flex-col mb-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Orders Management</h1>
-            <p className="text-muted-foreground">Track and manage your purchase orders efficiently</p>
+            <h1 className="text-2xl font-bold">Gestión de Pedidos</h1>
+            <p className="text-muted-foreground">Rastrea y gestiona tus órdenes de compra de manera eficiente</p>
           </div>
           <Button onClick={() => navigate("/pedido/create")} className="mt-4 md:mt-0">
             <Plus className="w-4 h-4 mr-2" />
-            Create Order
+            Crear Pedido
           </Button>
         </div>
 
@@ -373,14 +373,14 @@ const PedidoList = () => {
 
         <Card className="mb-6">
           <CardHeader className="pb-3">
-            <CardTitle>Filters</CardTitle>
+            <CardTitle>Filtros</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4 md:flex-row">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search orders by any field..."
+                  placeholder="Buscar pedidos por cualquier campo..."
                   className="pl-8"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -388,9 +388,9 @@ const PedidoList = () => {
               </div>
               <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full md:w-auto">
+                  <Button variant="outline" className="w-full bg-transparent md:w-auto">
                     <Filter className="w-4 h-4 mr-2" />
-                    Advanced Filters
+                    Filtros Avanzados
                     {activeFilterCount > 0 && (
                       <Badge variant="secondary" className="ml-1">
                         {activeFilterCount}
@@ -401,23 +401,23 @@ const PedidoList = () => {
                 <PopoverContent className="p-0 w-[350px]" align="end">
                   <div className="p-4 border-b">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Filters</h4>
+                      <h4 className="font-medium">Filtros</h4>
                       <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 px-2">
                         <X className="w-4 h-4 mr-2" />
-                        Clear all
+                        Limpiar todo
                       </Button>
                     </div>
                   </div>
                   <div className="p-4 space-y-4 max-h-[400px] overflow-y-auto">
-                    {/* Type Filter */}
+                    {/* Filtro de Tipo */}
                     <div className="space-y-2">
-                      <Label htmlFor="tipo-filter">Type</Label>
+                      <Label htmlFor="tipo-filter">Tipo</Label>
                       <Select value={filters.tipo} onValueChange={(value) => handleFilterChange("tipo", value)}>
                         <SelectTrigger id="tipo-filter">
-                          <SelectValue placeholder="Select type" />
+                          <SelectValue placeholder="Seleccionar tipo" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Types</SelectItem>
+                          <SelectItem value="all">Todos los Tipos</SelectItem>
                           {filterOptions.tipo.map((tipo) => (
                             <SelectItem key={tipo._id} value={tipo._id}>
                               {tipo.name}
@@ -427,18 +427,18 @@ const PedidoList = () => {
                       </Select>
                     </div>
 
-                    {/* Solicitante Filter */}
+                    {/* Filtro de Solicitante */}
                     <div className="space-y-2">
-                      <Label htmlFor="solicitante-filter">Requester</Label>
+                      <Label htmlFor="solicitante-filter">Solicitante</Label>
                       <Select
                         value={filters.solicitante}
                         onValueChange={(value) => handleFilterChange("solicitante", value)}
                       >
                         <SelectTrigger id="solicitante-filter">
-                          <SelectValue placeholder="Select requester" />
+                          <SelectValue placeholder="Seleccionar solicitante" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Requesters</SelectItem>
+                          <SelectItem value="all">Todos los Solicitantes</SelectItem>
                           {filterOptions.solicitante.map((solicitante) => (
                             <SelectItem key={solicitante._id} value={solicitante._id}>
                               {solicitante.name}
@@ -448,18 +448,18 @@ const PedidoList = () => {
                       </Select>
                     </div>
 
-                    {/* Table Status Filter */}
+                    {/* Filtro de Estado de Tabla */}
                     <div className="space-y-2">
-                      <Label htmlFor="table-status-filter">Status</Label>
+                      <Label htmlFor="table-status-filter">Estado</Label>
                       <Select
                         value={filters.table_status}
                         onValueChange={(value) => handleFilterChange("table_status", value)}
                       >
                         <SelectTrigger id="table-status-filter">
-                          <SelectValue placeholder="Select status" />
+                          <SelectValue placeholder="Seleccionar estado" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Statuses</SelectItem>
+                          <SelectItem value="all">Todos los Estados</SelectItem>
                           {filterOptions.table_status.map((status) => (
                             <SelectItem key={status._id} value={status._id}>
                               <div className="flex items-center">
@@ -475,13 +475,13 @@ const PedidoList = () => {
                       </Select>
                     </div>
 
-                    {/* Date Range Filter */}
+                    {/* Filtro de Rango de Fechas */}
                     <div className="space-y-2">
-                      <Label>Request Date Range</Label>
+                      <Label>Rango de Fecha de Solicitud</Label>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <Label htmlFor="fecha-desde" className="text-xs">
-                            From
+                            Desde
                           </Label>
                           <DatePicker
                             id="fecha-desde"
@@ -492,7 +492,7 @@ const PedidoList = () => {
                         </div>
                         <div>
                           <Label htmlFor="fecha-hasta" className="text-xs">
-                            To
+                            Hasta
                           </Label>
                           <DatePicker
                             id="fecha-hasta"
@@ -504,23 +504,23 @@ const PedidoList = () => {
                       </div>
                     </div>
 
-                    {/* Year Range Filter */}
+                    {/* Filtro de Rango de Años */}
                     <div className="space-y-2">
-                      <Label>Year Range</Label>
+                      <Label>Rango de Años</Label>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <Label htmlFor="ano-desde" className="text-xs">
-                            From
+                            Desde
                           </Label>
                           <Select
                             value={filters.anoDesde}
                             onValueChange={(value) => handleFilterChange("anoDesde", value)}
                           >
                             <SelectTrigger id="ano-desde">
-                              <SelectValue placeholder="From year" />
+                              <SelectValue placeholder="Desde año" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="any">Any</SelectItem>
+                              <SelectItem value="any">Cualquiera</SelectItem>
                               {filterOptions.ano
                                 .sort((a, b) => a - b)
                                 .map((ano) => (
@@ -533,17 +533,17 @@ const PedidoList = () => {
                         </div>
                         <div>
                           <Label htmlFor="ano-hasta" className="text-xs">
-                            To
+                            Hasta
                           </Label>
                           <Select
                             value={filters.anoHasta}
                             onValueChange={(value) => handleFilterChange("anoHasta", value)}
                           >
                             <SelectTrigger id="ano-hasta">
-                              <SelectValue placeholder="To year" />
+                              <SelectValue placeholder="Hasta año" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="any">Any</SelectItem>
+                              <SelectItem value="any">Cualquiera</SelectItem>
                               {filterOptions.ano
                                 .sort((a, b) => a - b)
                                 .map((ano) => (
@@ -559,7 +559,7 @@ const PedidoList = () => {
                   </div>
                   <div className="flex items-center justify-between p-4 border-t">
                     <Button variant="ghost" onClick={() => setIsFilterOpen(false)}>
-                      Cancel
+                      Cancelar
                     </Button>
                     <Button
                       onClick={() => {
@@ -567,18 +567,18 @@ const PedidoList = () => {
                         setIsFilterOpen(false)
                       }}
                     >
-                      Apply Filters
+                      Aplicar Filtros
                     </Button>
                   </div>
                 </PopoverContent>
               </Popover>
 
-              {/* Sort Dropdown */}
+              {/* Menú desplegable de Ordenar */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full md:w-auto">
+                  <Button variant="outline" className="w-full bg-transparent md:w-auto">
                     <SlidersHorizontal className="w-4 h-4 mr-2" />
-                    Sort
+                    Ordenar
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -589,11 +589,13 @@ const PedidoList = () => {
                       setSortConfig({ field, order: Number.parseInt(order) })
                     }}
                   >
-                    <DropdownMenuRadioItem value="fechaSolicitud-1">Date (Oldest First)</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="fechaSolicitud--1">Date (Newest First)</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="fechaSolicitud-1">Fecha (Más Antiguo Primero)</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="fechaSolicitud--1">
+                      Fecha (Más Reciente Primero)
+                    </DropdownMenuRadioItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuRadioItem value="importePedido-1">Amount (Low to High)</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="importePedido--1">Amount (High to Low)</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="importePedido-1">Importe (Menor a Mayor)</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="importePedido--1">Importe (Mayor a Menor)</DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -606,21 +608,21 @@ const PedidoList = () => {
             {isLoading ? (
               <div className="flex items-center justify-center py-24">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <span className="ml-2 text-lg">Loading orders...</span>
+                <span className="ml-2 text-lg">Cargando pedidos...</span>
               </div>
             ) : pedidos.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 <Box className="w-12 h-12 mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium">No orders found</h3>
+                <h3 className="text-lg font-medium">No se encontraron pedidos</h3>
                 <p className="mt-1 mb-4 text-muted-foreground">
                   {searchTerm || activeFilterCount > 0
-                    ? "Try adjusting your filters"
-                    : "Create your first order to get started"}
+                    ? "Intenta ajustar tus filtros"
+                    : "Crea tu primer pedido para comenzar"}
                 </p>
                 {!searchTerm && activeFilterCount === 0 && (
                   <Button onClick={() => navigate("/pedido/create")}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Create Order
+                    Crear Pedido
                   </Button>
                 )}
               </div>
@@ -630,7 +632,7 @@ const PedidoList = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="cursor-pointer hover:text-primary" onClick={() => handleSortChange("tipo")}>
-                        Type
+                        Tipo
                         {sortConfig.field === "tipo" && (
                           <span className="ml-1">{sortConfig.order === 1 ? "↑" : "↓"}</span>
                         )}
@@ -639,7 +641,7 @@ const PedidoList = () => {
                         className="cursor-pointer hover:text-primary"
                         onClick={() => handleSortChange("referencia")}
                       >
-                        Reference
+                        Referencia
                         {sortConfig.field === "referencia" && (
                           <span className="ml-1">{sortConfig.order === 1 ? "↑" : "↓"}</span>
                         )}
@@ -648,7 +650,7 @@ const PedidoList = () => {
                         className="cursor-pointer hover:text-primary"
                         onClick={() => handleSortChange("solicitante")}
                       >
-                        Requester
+                        Solicitante
                         {sortConfig.field === "solicitante" && (
                           <span className="ml-1">{sortConfig.order === 1 ? "↑" : "↓"}</span>
                         )}
@@ -657,7 +659,7 @@ const PedidoList = () => {
                         className="cursor-pointer hover:text-primary"
                         onClick={() => handleSortChange("proveedor")}
                       >
-                        Provider
+                        Proveedor
                         {sortConfig.field === "proveedor" && (
                           <span className="ml-1">{sortConfig.order === 1 ? "↑" : "↓"}</span>
                         )}
@@ -666,7 +668,7 @@ const PedidoList = () => {
                         className="cursor-pointer hover:text-primary"
                         onClick={() => handleSortChange("importePedido")}
                       >
-                        Amount
+                        Importe
                         {sortConfig.field === "importePedido" && (
                           <span className="ml-1">{sortConfig.order === 1 ? "↑" : "↓"}</span>
                         )}
@@ -675,7 +677,7 @@ const PedidoList = () => {
                         className="cursor-pointer hover:text-primary"
                         onClick={() => handleSortChange("fechaSolicitud")}
                       >
-                        Request Date
+                        Fecha de Solicitud
                         {sortConfig.field === "fechaSolicitud" && (
                           <span className="ml-1">{sortConfig.order === 1 ? "↑" : "↓"}</span>
                         )}
@@ -684,12 +686,12 @@ const PedidoList = () => {
                         className="cursor-pointer hover:text-primary"
                         onClick={() => handleSortChange("table_status")}
                       >
-                        Status
+                        Estado
                         {sortConfig.field === "table_status" && (
                           <span className="ml-1">{sortConfig.order === 1 ? "↑" : "↓"}</span>
                         )}
                       </TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -734,24 +736,24 @@ const PedidoList = () => {
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon">
                                     <MoreHorizontal className="w-4 h-4" />
-                                    <span className="sr-only">Actions</span>
+                                    <span className="sr-only">Acciones</span>
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => navigate(`/pedido/${pedido._id}`)}>
                                     <FileText className="w-4 h-4 mr-2" />
-                                    View Details
+                                    Ver Detalles
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => navigate(`/pedido/edit/${pedido._id}`)}>
                                     <Edit className="w-4 h-4 mr-2" />
-                                    Edit
+                                    Editar
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => confirmDelete(pedido)}
                                     className="text-red-600 focus:text-red-600"
                                   >
                                     <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete
+                                    Eliminar
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -767,8 +769,8 @@ const PedidoList = () => {
 
             <div className="flex items-center justify-between px-2 py-4 border-t">
               <div className="text-sm text-muted-foreground">
-                Showing {pedidos.length > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} entries
+                Mostrando {pedidos.length > 0 ? (pagination.page - 1) * pagination.limit + 1 : 0} a{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total} entradas
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -778,7 +780,7 @@ const PedidoList = () => {
                   disabled={pagination.page === 1}
                 >
                   <ChevronLeft className="w-4 h-4 mr-2" />
-                  Previous
+                  Anterior
                 </Button>
                 <Button
                   variant="outline"
@@ -786,7 +788,7 @@ const PedidoList = () => {
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={pagination.page >= pagination.totalPages}
                 >
-                  Next
+                  Siguiente
                   <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
@@ -794,21 +796,21 @@ const PedidoList = () => {
           </CardContent>
         </Card>
 
-        {/* Delete Confirmation Dialog */}
+        {/* Diálogo de Confirmación de Eliminación */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete the order
-                <span className="font-semibold"> {getPropertyValue(pedidoToDelete?.referencia)}</span>. This action
-                cannot be undone.
+                Esto eliminará permanentemente el pedido
+                <span className="font-semibold"> {getPropertyValue(pedidoToDelete?.referencia)}</span>. Esta acción no
+                se puede deshacer.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
               <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-                Delete
+                Eliminar
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

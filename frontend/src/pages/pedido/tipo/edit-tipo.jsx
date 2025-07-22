@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { getTipoById, updateTipo,deleteTipo} from "../../../apis/pedido/tipoApi.jsx"
+import { getTipoById, updateTipo, deleteTipo } from "../../../apis/pedido/tipoApi.jsx"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,11 +41,11 @@ function EditTipo() {
           name: data.name || "",
         })
       } catch (error) {
-        console.error("Error fetching type:", error)
+        console.error("Error al obtener el tipo:", error)
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load type data",
+          description: "Error al cargar los datos del tipo",
         })
         navigate("/tipo")
       } finally {
@@ -63,48 +63,50 @@ function EditTipo() {
       [name]: value,
     }))
   }
-const handleDelete = async () => {
-  try {
-    setIsSaving(true)
-    await deleteTipo(id)
-    toast({
-      title: "Success",
-      description: "Type deleted successfully",
-    })
-    navigate("/tipo")
-  } catch (error) {
-    console.error("Error deleting type:", error)
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: error.message || "Failed to delete type",
-    })
-  } finally {
-    setIsSaving(false)
+
+  const handleDelete = async () => {
+    try {
+      setIsSaving(true)
+      await deleteTipo(id)
+      toast({
+        title: "Éxito",
+        description: "Tipo eliminado exitosamente",
+      })
+      navigate("/tipo")
+    } catch (error) {
+      console.error("Error al eliminar el tipo:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Error al eliminar el tipo",
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
-}
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSaving(true)
 
     try {
-      // Validate required fields
+      // Validar campos requeridos
       if (!formData.name) {
-        throw new Error("Name is required")
+        throw new Error("El nombre es requerido")
       }
 
       await updateTipo(id, formData)
       toast({
-        title: "Success",
-        description: "Type updated successfully",
+        title: "Éxito",
+        description: "Tipo actualizado exitosamente",
       })
       navigate("/tipo")
     } catch (error) {
-      console.error("Error updating type:", error)
+      console.error("Error al actualizar el tipo:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to update type",
+        description: error.message || "Error al actualizar el tipo",
       })
     } finally {
       setIsSaving(false)
@@ -135,8 +137,8 @@ const handleDelete = async () => {
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Edit Type</h1>
-              <p className="text-muted-foreground">Modify an existing order type</p>
+              <h1 className="text-3xl font-bold tracking-tight">Editar Tipo</h1>
+              <p className="text-muted-foreground">Modificar un tipo de pedido existente</p>
             </div>
           </div>
         </div>
@@ -144,47 +146,47 @@ const handleDelete = async () => {
         <Card className="max-w-2xl mx-auto">
           <form onSubmit={handleSubmit}>
             <CardHeader>
-              <CardTitle>Type Details</CardTitle>
-              <CardDescription>Update the information for this order type</CardDescription>
+              <CardTitle>Detalles del Tipo</CardTitle>
+              <CardDescription>Actualizar la información de este tipo de pedido</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">Nombre *</Label>
                 <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required />
-                <p className="text-sm text-muted-foreground">The name should be unique and descriptive</p>
+                <p className="text-sm text-muted-foreground">El nombre debe ser único y descriptivo</p>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
               <div className="flex gap-2">
                 <Button variant="outline" type="button" onClick={() => navigate("/tipo")}>
-                  Cancel
+                  Cancelar
                 </Button>
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" type="button">
                       <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
+                      Eliminar
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogTitle>¿Estás completamente seguro?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete this type and may affect any orders
-                        that are using it.
+                        Esta acción no se puede deshacer. Esto eliminará permanentemente este tipo y puede afectar
+                        cualquier pedido que lo esté utilizando.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
                       <AlertDialogAction
-  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-  onClick={handleDelete}
-  disabled={isSaving}
->
-  {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-  Delete
-</AlertDialogAction>
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={handleDelete}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                        Eliminar
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -193,7 +195,7 @@ const handleDelete = async () => {
               <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Save className="w-4 h-4 mr-2" />
-                Save Changes
+                Guardar Cambios
               </Button>
             </CardFooter>
           </form>
@@ -204,4 +206,3 @@ const handleDelete = async () => {
 }
 
 export default EditTipo
-

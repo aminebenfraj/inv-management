@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { getTableStatusById, updateTableStatus,deleteTableStatus } from "../../../apis/pedido/tableStatusApi.jsx"
+import { getTableStatusById, updateTableStatus, deleteTableStatus } from "../../../apis/pedido/tableStatusApi.jsx"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -45,11 +45,11 @@ function EditTableStatus() {
           order: data.order || 0,
         })
       } catch (error) {
-        console.error("Error fetching table status:", error)
+        console.error("Error al obtener el estado de tabla:", error)
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load table status data",
+          description: "Error al cargar los datos del estado de tabla",
         })
         navigate("/table-status")
       } finally {
@@ -59,26 +59,27 @@ function EditTableStatus() {
 
     fetchTableStatus()
   }, [id, navigate, toast])
-const handleDelete = async () => {
-  try {
-    setIsSaving(true)
-    await deleteTableStatus(id)
-    toast({
-      title: "Success",
-      description: "Table status deleted successfully",
-    })
-    navigate("/table-status")
-  } catch (error) {
-    console.error("Error deleting table status:", error)
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: error.response?.data?.error || error.message || "Failed to delete table status",
-    })
-  } finally {
-    setIsSaving(false)
+
+  const handleDelete = async () => {
+    try {
+      setIsSaving(true)
+      await deleteTableStatus(id)
+      toast({
+        title: "Éxito",
+        description: "Estado de tabla eliminado exitosamente",
+      })
+      navigate("/table-status")
+    } catch (error) {
+      console.error("Error al eliminar el estado de tabla:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.response?.data?.error || error.message || "Error al eliminar el estado de tabla",
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
-}
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -93,23 +94,23 @@ const handleDelete = async () => {
     setIsSaving(true)
 
     try {
-      // Validate required fields
+      // Validar campos requeridos
       if (!formData.name) {
-        throw new Error("Name is required")
+        throw new Error("El nombre es requerido")
       }
 
       await updateTableStatus(id, formData)
       toast({
-        title: "Success",
-        description: "Table status updated successfully",
+        title: "Éxito",
+        description: "Estado de tabla actualizado exitosamente",
       })
       navigate("/table-status")
     } catch (error) {
-      console.error("Error updating table status:", error)
+      console.error("Error al actualizar el estado de tabla:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to update table status",
+        description: error.message || "Error al actualizar el estado de tabla",
       })
     } finally {
       setIsSaving(false)
@@ -140,8 +141,8 @@ const handleDelete = async () => {
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Edit Table Status</h1>
-              <p className="text-muted-foreground">Modify an existing table status</p>
+              <h1 className="text-3xl font-bold tracking-tight">Editar Estado de Tabla</h1>
+              <p className="text-muted-foreground">Modificar un estado de tabla existente</p>
             </div>
           </div>
         </div>
@@ -149,12 +150,12 @@ const handleDelete = async () => {
         <Card className="max-w-2xl mx-auto">
           <form onSubmit={handleSubmit}>
             <CardHeader>
-              <CardTitle>Table Status Details</CardTitle>
-              <CardDescription>Update the information for this table status</CardDescription>
+              <CardTitle>Detalles del Estado de Tabla</CardTitle>
+              <CardDescription>Actualizar la información de este estado de tabla</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">Nombre *</Label>
                 <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required />
               </div>
 
@@ -174,42 +175,42 @@ const handleDelete = async () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="order">Display Order</Label>
+                <Label htmlFor="order">Orden de Visualización</Label>
                 <Input id="order" name="order" type="number" value={formData.order} onChange={handleInputChange} />
-                <p className="text-sm text-muted-foreground">Lower numbers will appear first in the list</p>
+                <p className="text-sm text-muted-foreground">Los números más bajos aparecerán primero en la lista</p>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
               <div className="flex gap-2">
                 <Button variant="outline" type="button" onClick={() => navigate("/table-status")}>
-                  Cancel
+                  Cancelar
                 </Button>
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" type="button">
                       <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
+                      Eliminar
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogTitle>¿Estás completamente seguro?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete this table status and may affect any
-                        orders that are using it.
+                        Esta acción no se puede deshacer. Esto eliminará permanentemente este estado de tabla y puede
+                        afectar cualquier pedido que lo esté utilizando.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
                       <AlertDialogAction
-  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-  onClick={handleDelete}
-  disabled={isSaving}
->
-  {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-  Delete
-</AlertDialogAction>
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={handleDelete}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                        Eliminar
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -218,7 +219,7 @@ const handleDelete = async () => {
               <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Save className="w-4 h-4 mr-2" />
-                Save Changes
+                Guardar Cambios
               </Button>
             </CardFooter>
           </form>
@@ -229,4 +230,3 @@ const handleDelete = async () => {
 }
 
 export default EditTableStatus
-

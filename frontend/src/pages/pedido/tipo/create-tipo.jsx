@@ -33,23 +33,23 @@ function CreateTipo() {
     setIsLoading(true)
 
     try {
-      // Validate required fields
+      // Validar campos requeridos
       if (!formData.name) {
-        throw new Error("Name is required")
+        throw new Error("El nombre es requerido")
       }
 
       await createTipo(formData)
       toast({
-        title: "Success",
-        description: "Type created successfully",
+        title: "Éxito",
+        description: "Tipo creado exitosamente",
       })
       navigate("/tipo")
     } catch (error) {
-      console.error("Error creating type:", error)
+      console.error("Error al crear el tipo:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to create type",
+        description: error.message || "Error al crear el tipo",
       })
     } finally {
       setIsLoading(false)
@@ -70,8 +70,8 @@ function CreateTipo() {
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Create Type</h1>
-              <p className="text-muted-foreground">Add a new order type to the system</p>
+              <h1 className="text-3xl font-bold tracking-tight">Crear Tipo</h1>
+              <p className="text-muted-foreground">Agregar un nuevo tipo de pedido al sistema</p>
             </div>
           </div>
         </div>
@@ -79,24 +79,24 @@ function CreateTipo() {
         <Card className="max-w-2xl mx-auto">
           <form onSubmit={handleSubmit}>
             <CardHeader>
-              <CardTitle>Type Details</CardTitle>
-              <CardDescription>Create a new type for categorizing orders in the system</CardDescription>
+              <CardTitle>Detalles del Tipo</CardTitle>
+              <CardDescription>Crear un nuevo tipo para categorizar pedidos en el sistema</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name">Nombre *</Label>
                 <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required />
-                <p className="text-sm text-muted-foreground">The name should be unique and descriptive</p>
+                <p className="text-sm text-muted-foreground">El nombre debe ser único y descriptivo</p>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline" type="button" onClick={() => navigate("/tipo")}>
-                Cancel
+                Cancelar
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Save className="w-4 h-4 mr-2" />
-                Save Type
+                Guardar Tipo
               </Button>
             </CardFooter>
           </form>
@@ -107,4 +107,3 @@ function CreateTipo() {
 }
 
 export default CreateTipo
-

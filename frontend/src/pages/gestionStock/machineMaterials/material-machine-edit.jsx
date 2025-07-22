@@ -52,13 +52,13 @@ const MaterialMachineEdit = () => {
   const [maxAvailableStock, setMaxAvailableStock] = useState(0)
   const [error, setError] = useState(null)
 
-  // Calculate new values based on adjustment mode
+  // Calcular nuevos valores basados en el modo de ajuste
   const calculatedNewStock = allocatedStock
 
-  // Calculate the difference for display
+  // Calcular la diferencia para mostrar
   const stockDifference = calculatedNewStock - originalStock
 
-  // Calculate available material stock after adjustment
+  // Calcular stock de material disponible después del ajuste
   const availableAfterAdjustment = maxAvailableStock - calculatedNewStock
 
   useEffect(() => {
@@ -69,13 +69,13 @@ const MaterialMachineEdit = () => {
 
   useEffect(() => {
     if (material && material.currentStock !== undefined) {
-      // Calculate max available stock (current material stock + what's already allocated to this machine)
+      // Calcular stock máximo disponible (stock actual del material + lo que ya está asignado a esta máquina)
       const max = material.currentStock + originalStock
       setMaxAvailableStock(max)
     }
   }, [material, originalStock])
 
-  // Update adjustment amount when allocated stock changes
+  // Actualizar cantidad de ajuste cuando cambie el stock asignado
   useEffect(() => {
     setAdjustmentAmount(allocatedStock - originalStock)
   }, [allocatedStock, originalStock])
@@ -85,34 +85,34 @@ const MaterialMachineEdit = () => {
       setLoading(true)
       setError(null)
 
-      console.log("Fetching allocations for ID:", id) // Debug log
+      console.log("Obteniendo asignaciones para ID:", id) // Log de depuración
 
       const response = await getAllAllocations()
-      console.log("Raw API Response:", response) // Debug log
+      console.log("Respuesta cruda de la API:", response) // Log de depuración
 
-      // Handle different response formats
+      // Manejar diferentes formatos de respuesta
       let allAllocations = []
       if (response && response.data && Array.isArray(response.data)) {
-        // Paginated response format
+        // Formato de respuesta paginada
         allAllocations = response.data
-        console.log("Using paginated data:", allAllocations.length, "items") // Debug log
+        console.log("Usando datos paginados:", allAllocations.length, "elementos") // Log de depuración
       } else if (Array.isArray(response)) {
-        // Direct array response format
+        // Formato de respuesta de array directo
         allAllocations = response
-        console.log("Using direct array data:", allAllocations.length, "items") // Debug log
+        console.log("Usando datos de array directo:", allAllocations.length, "elementos") // Log de depuración
       } else {
-        console.log("Unexpected response format:", typeof response, response) // Debug log
-        throw new Error("Invalid response format from API")
+        console.log("Formato de respuesta inesperado:", typeof response, response) // Log de depuración
+        throw new Error("Formato de respuesta inválido de la API")
       }
 
       const currentAllocation = allAllocations.find((a) => a._id === id)
-      console.log("Found allocation:", currentAllocation) // Debug log
+      console.log("Asignación encontrada:", currentAllocation) // Log de depuración
 
       if (!currentAllocation) {
-        setError("Allocation not found")
+        setError("Asignación no encontrada")
         toast({
           title: "Error",
-          description: "Allocation not found",
+          description: "Asignación no encontrada",
           variant: "destructive",
         })
         return
@@ -124,27 +124,27 @@ const MaterialMachineEdit = () => {
       setAllocatedStock(currentAllocation.allocatedStock || 0)
       setOriginalStock(currentAllocation.allocatedStock || 0)
 
-      // Fetch material details to get current stock
+      // Obtener detalles del material para obtener el stock actual
       if (currentAllocation.material?._id) {
         try {
           const materialDetails = await getMaterialById(currentAllocation.material._id)
           setMaterial(materialDetails)
         } catch (materialError) {
-          console.error("Error fetching material details:", materialError)
-          // Don't fail the whole component if material details can't be fetched
+          console.error("Error al obtener detalles del material:", materialError)
+          // No fallar todo el componente si no se pueden obtener los detalles del material
           toast({
-            title: "Warning",
-            description: "Could not fetch complete material details",
+            title: "Advertencia",
+            description: "No se pudieron obtener los detalles completos del material",
             variant: "default",
           })
         }
       }
     } catch (error) {
-      console.error("Error fetching allocation details:", error)
-      setError(error.message || "Failed to fetch allocation details")
+      console.error("Error al obtener detalles de la asignación:", error)
+      setError(error.message || "Error al obtener los detalles de la asignación")
       toast({
         title: "Error",
-        description: "Failed to fetch allocation details",
+        description: "Error al obtener los detalles de la asignación",
         variant: "destructive",
       })
     } finally {
@@ -158,17 +158,17 @@ const MaterialMachineEdit = () => {
     if (calculatedNewStock < 0) {
       toast({
         title: "Error",
-        description: "Allocated stock cannot be negative",
+        description: "El stock asignado no puede ser negativo",
         variant: "destructive",
       })
       return
     }
 
-    // Check if there's enough stock available if we're increasing the allocation
+    // Verificar si hay suficiente stock disponible si estamos aumentando la asignación
     if (stockDifference > 0 && material && material.currentStock < stockDifference) {
       toast({
         title: "Error",
-        description: `Not enough stock available. Only ${material.currentStock} units available.`,
+        description: `No hay suficiente stock disponible. Solo ${material.currentStock} unidades disponibles.`,
         variant: "destructive",
       })
       return
@@ -176,7 +176,7 @@ const MaterialMachineEdit = () => {
 
     setSaving(true)
     try {
-      // Helper function to validate MongoDB ObjectId format
+      // Función auxiliar para validar formato de ObjectId de MongoDB
       const isValidObjectId = (id) => {
         return /^[0-9a-fA-F]{24}$/.test(id)
       }
@@ -185,26 +185,26 @@ const MaterialMachineEdit = () => {
 
       const updateData = {
         allocatedStock: calculatedNewStock,
-        comment: comment || `Stock updated from ${originalStock} to ${calculatedNewStock}`,
+        comment: comment || `Stock actualizado de ${originalStock} a ${calculatedNewStock}`,
       }
 
-      // Only include userId if it's a valid ObjectId
+      // Solo incluir userId si es un ObjectId válido
       if (userId && isValidObjectId(userId)) {
         updateData.userId = userId
       }
 
       const response = await updateAllocation(id, updateData)
 
-      // Show success animation
+      // Mostrar animación de éxito
       setShowSuccessAnimation(true)
       setTimeout(() => setShowSuccessAnimation(false), 2000)
 
       toast({
-        title: "Success",
-        description: "Allocation updated successfully",
+        title: "Éxito",
+        description: "Asignación actualizada exitosamente",
       })
 
-      // Update material with new stock if provided in response
+      // Actualizar material con nuevo stock si se proporciona en la respuesta
       if (response.updatedMaterialStock !== undefined) {
         setMaterial({
           ...material,
@@ -212,17 +212,17 @@ const MaterialMachineEdit = () => {
         })
       }
 
-      // Refresh allocation details to get updated history
+      // Actualizar detalles de asignación para obtener historial actualizado
       await fetchAllocationDetails()
 
-      // Reset adjustment amount after successful update
+      // Reiniciar cantidad de ajuste después de actualización exitosa
       setAdjustmentAmount(0)
       setComment("")
     } catch (error) {
-      console.error("Update error:", error)
+      console.error("Error de actualización:", error)
       toast({
         title: "Error",
-        description: error.response?.data?.error || error.message || "Failed to update allocation",
+        description: error.response?.data?.error || error.message || "Error al actualizar la asignación",
         variant: "destructive",
       })
     } finally {
@@ -239,19 +239,19 @@ const MaterialMachineEdit = () => {
     setAdjustmentAmount(0)
   }
 
-  // Loading state
+  // Estado de carga
   if (loading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-64">
           <div className="w-8 h-8 border-4 rounded-full animate-spin border-violet-500 border-t-transparent"></div>
-          <span className="ml-2">Loading allocation details...</span>
+          <span className="ml-2">Cargando detalles de la asignación...</span>
         </div>
       </MainLayout>
     )
   }
 
-  // Error state
+  // Estado de error
   if (error) {
     return (
       <MainLayout>
@@ -264,7 +264,7 @@ const MaterialMachineEdit = () => {
           <div className="flex justify-center mt-4">
             <Button variant="outline" onClick={() => navigate("/machinematerial")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to List
+              Volver a la Lista
             </Button>
           </div>
         </div>
@@ -272,20 +272,20 @@ const MaterialMachineEdit = () => {
     )
   }
 
-  // No allocation found
+  // No se encontró asignación
   if (!allocation) {
     return (
       <MainLayout>
         <div className="container py-8 mx-auto">
           <Alert className="max-w-md mx-auto">
             <AlertCircle className="w-4 h-4" />
-            <AlertTitle>Not Found</AlertTitle>
-            <AlertDescription>The requested allocation could not be found.</AlertDescription>
+            <AlertTitle>No Encontrado</AlertTitle>
+            <AlertDescription>No se pudo encontrar la asignación solicitada.</AlertDescription>
           </Alert>
           <div className="flex justify-center mt-4">
             <Button variant="outline" onClick={() => navigate("/machinematerial")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to List
+              Volver a la Lista
             </Button>
           </div>
         </div>
@@ -306,7 +306,7 @@ const MaterialMachineEdit = () => {
           <div className="flex items-center gap-2">
             <Button variant="ghost" onClick={() => navigate("/machinematerial")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to List
+              Volver a la Lista
             </Button>
           </div>
           <div className="flex items-center gap-2">
@@ -314,12 +314,12 @@ const MaterialMachineEdit = () => {
               Material: {material?.reference || "N/A"}
             </Badge>
             <Badge variant="outline" className="px-3 py-1">
-              Machine: {machine?.name || "N/A"}
+              Máquina: {machine?.name || "N/A"}
             </Badge>
             {machine?.factory && (
               <Badge variant="outline" className="px-3 py-1">
                 <Building2 className="w-3 h-3 mr-1" />
-                Factory: {machine.factory.name}
+                Fábrica: {machine.factory.name}
               </Badge>
             )}
           </div>
@@ -329,19 +329,19 @@ const MaterialMachineEdit = () => {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="edit" className="flex items-center gap-2">
               <Calculator className="w-4 h-4" />
-              Stock Adjustment
+              Ajuste de Stock
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-2">
               <History className="w-4 h-4" />
-              Allocation History
+              Historial de Asignaciones
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="edit">
             <Card className="border-violet-500/20">
               <CardHeader>
-                <CardTitle>Edit Material Allocation</CardTitle>
-                <CardDescription>Update the stock allocation for this machine</CardDescription>
+                <CardTitle>Editar Asignación de Material</CardTitle>
+                <CardDescription>Actualizar la asignación de stock para esta máquina</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit}>
@@ -350,24 +350,24 @@ const MaterialMachineEdit = () => {
                       <div className="space-y-2">
                         <h3 className="flex items-center gap-2 font-medium">
                           <Package className="w-4 h-4 text-violet-500" />
-                          Material Information
+                          Información del Material
                         </h3>
                         <div className="p-4 border rounded-md bg-muted/50">
                           <div className="grid gap-2">
                             <div>
-                              <Label className="text-sm text-muted-foreground">Reference</Label>
+                              <Label className="text-sm text-muted-foreground">Referencia</Label>
                               <p className="font-medium">{material?.reference || "N/A"}</p>
                             </div>
                             <div>
-                              <Label className="text-sm text-muted-foreground">Description</Label>
+                              <Label className="text-sm text-muted-foreground">Descripción</Label>
                               <p className="font-medium">{material?.description || "N/A"}</p>
                             </div>
                             <div>
-                              <Label className="text-sm text-muted-foreground">Current Stock</Label>
+                              <Label className="text-sm text-muted-foreground">Stock Actual</Label>
                               <p className="font-medium">{material?.currentStock ?? "N/A"}</p>
                             </div>
                             <div>
-                              <Label className="text-sm text-muted-foreground">Manufacturer</Label>
+                              <Label className="text-sm text-muted-foreground">Fabricante</Label>
                               <p className="font-medium">{material?.manufacturer || "N/A"}</p>
                             </div>
                           </div>
@@ -377,25 +377,33 @@ const MaterialMachineEdit = () => {
                       <div className="space-y-2">
                         <h3 className="flex items-center gap-2 font-medium">
                           <Settings className="w-4 h-4 text-violet-500" />
-                          Machine Information
+                          Información de la Máquina
                         </h3>
                         <div className="p-4 border rounded-md bg-muted/50">
                           <div className="grid gap-2">
                             <div>
-                              <Label className="text-sm text-muted-foreground">Name</Label>
+                              <Label className="text-sm text-muted-foreground">Nombre</Label>
                               <p className="font-medium">{machine?.name || "N/A"}</p>
                             </div>
                             <div>
-                              <Label className="text-sm text-muted-foreground">Description</Label>
+                              <Label className="text-sm text-muted-foreground">Descripción</Label>
                               <p className="font-medium">{machine?.description || "N/A"}</p>
                             </div>
                             <div>
-                              <Label className="text-sm text-muted-foreground">Status</Label>
-                              <p className="font-medium capitalize">{machine?.status || "N/A"}</p>
+                              <Label className="text-sm text-muted-foreground">Estado</Label>
+                              <p className="font-medium capitalize">
+                                {machine?.status === "active"
+                                  ? "activa"
+                                  : machine?.status === "maintenance"
+                                    ? "mantenimiento"
+                                    : machine?.status === "inactive"
+                                      ? "inactiva"
+                                      : machine?.status || "N/A"}
+                              </p>
                             </div>
                             {machine?.factory && (
                               <div>
-                                <Label className="text-sm text-muted-foreground">Factory</Label>
+                                <Label className="text-sm text-muted-foreground">Fábrica</Label>
                                 <div className="flex items-center gap-2">
                                   <Building2 className="w-4 h-4 text-muted-foreground" />
                                   <p className="font-medium">{machine.factory.name}</p>
@@ -411,7 +419,7 @@ const MaterialMachineEdit = () => {
 
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-medium">Stock Adjustment</h3>
+                        <h3 className="font-medium">Ajuste de Stock</h3>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -421,19 +429,19 @@ const MaterialMachineEdit = () => {
                             className="h-8 px-2 text-xs bg-transparent"
                           >
                             <RefreshCw className="w-3 h-3 mr-1" />
-                            Reset
+                            Reiniciar
                           </Button>
                         </div>
                       </div>
 
-                      {/* Current allocation display */}
+                      {/* Visualización de asignación actual */}
                       <div className="p-4 border rounded-md bg-muted/30">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-muted-foreground">Current Allocation</span>
+                          <span className="text-sm text-muted-foreground">Asignación Actual</span>
                           <span className="text-lg font-medium">{originalStock}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">New Allocation</span>
+                          <span className="text-sm text-muted-foreground">Nueva Asignación</span>
                           <div className="flex items-center gap-2">
                             <span className="text-lg font-medium">{calculatedNewStock}</span>
                             {stockDifference !== 0 && (
@@ -457,9 +465,9 @@ const MaterialMachineEdit = () => {
                         </div>
                       </div>
 
-                      {/* Adjustment controls */}
+                      {/* Controles de ajuste */}
                       <div className="space-y-2">
-                        <Label htmlFor="allocatedStock">Set Exact Stock Value</Label>
+                        <Label htmlFor="allocatedStock">Establecer Valor Exacto de Stock</Label>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -491,30 +499,30 @@ const MaterialMachineEdit = () => {
                         </div>
                       </div>
 
-                      {/* Stock impact visualization */}
+                      {/* Visualización del impacto en el stock */}
                       {stockDifference !== 0 && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
                           className="p-4 border rounded-md bg-muted/30"
                         >
-                          <h4 className="mb-2 font-medium">Stock Impact</h4>
+                          <h4 className="mb-2 font-medium">Impacto en el Stock</h4>
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-sm">Total Available Stock</span>
+                              <span className="text-sm">Stock Total Disponible</span>
                               <span className="font-medium">{maxAvailableStock}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-sm">Currently Allocated</span>
+                              <span className="text-sm">Actualmente Asignado</span>
                               <span className="font-medium">{originalStock}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-sm">New Allocation</span>
+                              <span className="text-sm">Nueva Asignación</span>
                               <span className="font-medium">{calculatedNewStock}</span>
                             </div>
                             <Separator />
                             <div className="flex items-center justify-between">
-                              <span className="text-sm">Remaining Available Stock</span>
+                              <span className="text-sm">Stock Disponible Restante</span>
                               <span className={`font-medium ${availableAfterAdjustment < 0 ? "text-red-600" : ""}`}>
                                 {availableAfterAdjustment}
                               </span>
@@ -523,7 +531,7 @@ const MaterialMachineEdit = () => {
                         </motion.div>
                       )}
 
-                      {/* Warning alerts */}
+                      {/* Alertas de advertencia */}
                       <AnimatePresence>
                         {availableAfterAdjustment < 0 && (
                           <motion.div
@@ -533,10 +541,10 @@ const MaterialMachineEdit = () => {
                           >
                             <Alert variant="destructive">
                               <AlertCircle className="w-4 h-4" />
-                              <AlertTitle>Not enough stock available</AlertTitle>
+                              <AlertTitle>No hay suficiente stock disponible</AlertTitle>
                               <AlertDescription>
-                                You're trying to allocate {calculatedNewStock} units, but only {maxAvailableStock} are
-                                available in total.
+                                Estás intentando asignar {calculatedNewStock} unidades, pero solo {maxAvailableStock}{" "}
+                                están disponibles en total.
                               </AlertDescription>
                             </Alert>
                           </motion.div>
@@ -558,29 +566,29 @@ const MaterialMachineEdit = () => {
                                 className={`w-4 h-4 ${stockDifference > 0 ? "text-amber-600" : "text-blue-600"}`}
                               />
                               <AlertTitle className={stockDifference > 0 ? "text-amber-800" : "text-blue-800"}>
-                                {stockDifference > 0 ? "Adding Stock" : "Removing Stock"}
+                                {stockDifference > 0 ? "Agregando Stock" : "Removiendo Stock"}
                               </AlertTitle>
                               <AlertDescription className={stockDifference > 0 ? "text-amber-700" : "text-blue-700"}>
                                 {stockDifference > 0
-                                  ? `You're adding ${stockDifference} units to this machine. This will reduce the material's available stock by the same amount.`
-                                  : `You're removing ${-stockDifference} units from this machine. This will return stock to the material's inventory.`}
+                                  ? `Estás agregando ${stockDifference} unidades a esta máquina. Esto reducirá el stock disponible del material en la misma cantidad.`
+                                  : `Estás removiendo ${-stockDifference} unidades de esta máquina. Esto devolverá stock al inventario del material.`}
                               </AlertDescription>
                             </Alert>
                           </motion.div>
                         )}
                       </AnimatePresence>
 
-                      {/* Comment field */}
+                      {/* Campo de comentario */}
                       <div className="space-y-2">
-                        <Label htmlFor="comment">Comment (Optional)</Label>
+                        <Label htmlFor="comment">Comentario (Opcional)</Label>
                         <Input
                           id="comment"
-                          placeholder="Reason for adjustment..."
+                          placeholder="Razón del ajuste..."
                           value={comment}
                           onChange={(e) => setComment(e.target.value)}
                         />
                         <p className="text-xs text-muted-foreground">
-                          If left empty, a default comment will be generated.
+                          Si se deja vacío, se generará un comentario predeterminado.
                         </p>
                       </div>
                     </div>
@@ -595,12 +603,12 @@ const MaterialMachineEdit = () => {
                       {saving ? (
                         <div className="flex items-center">
                           <div className="w-4 h-4 mr-2 border-2 border-current rounded-full animate-spin border-t-transparent"></div>
-                          Saving...
+                          Guardando...
                         </div>
                       ) : (
                         <>
                           <Save className="w-4 h-4 mr-2" />
-                          Update Allocation
+                          Actualizar Asignación
                         </>
                       )}
                     </Button>
@@ -613,19 +621,21 @@ const MaterialMachineEdit = () => {
           <TabsContent value="history">
             <Card className="border-violet-500/20">
               <CardHeader>
-                <CardTitle>Allocation History</CardTitle>
-                <CardDescription>Track changes to this material allocation over time</CardDescription>
+                <CardTitle>Historial de Asignaciones</CardTitle>
+                <CardDescription>
+                  Seguir los cambios en esta asignación de material a lo largo del tiempo
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="overflow-hidden border rounded-md">
                   <table className="min-w-full divide-y divide-border">
                     <thead className="bg-muted">
                       <tr>
-                        <th className="px-4 py-3 text-xs font-medium text-left text-muted-foreground">Date</th>
-                        <th className="px-4 py-3 text-xs font-medium text-left text-muted-foreground">Previous</th>
-                        <th className="px-4 py-3 text-xs font-medium text-left text-muted-foreground">New</th>
-                        <th className="px-4 py-3 text-xs font-medium text-left text-muted-foreground">Change</th>
-                        <th className="px-4 py-3 text-xs font-medium text-left text-muted-foreground">Comment</th>
+                        <th className="px-4 py-3 text-xs font-medium text-left text-muted-foreground">Fecha</th>
+                        <th className="px-4 py-3 text-xs font-medium text-left text-muted-foreground">Anterior</th>
+                        <th className="px-4 py-3 text-xs font-medium text-left text-muted-foreground">Nuevo</th>
+                        <th className="px-4 py-3 text-xs font-medium text-left text-muted-foreground">Cambio</th>
+                        <th className="px-4 py-3 text-xs font-medium text-left text-muted-foreground">Comentario</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -635,7 +645,7 @@ const MaterialMachineEdit = () => {
                           return (
                             <tr key={index} className="hover:bg-muted/50">
                               <td className="px-4 py-3 text-sm">
-                                {entry.date ? new Date(entry.date).toLocaleString() : "N/A"}
+                                {entry.date ? new Date(entry.date).toLocaleString("es-ES") : "N/A"}
                               </td>
                               <td className="px-4 py-3 text-sm">{entry.previousStock ?? "N/A"}</td>
                               <td className="px-4 py-3 text-sm">{entry.newStock ?? "N/A"}</td>
@@ -654,18 +664,18 @@ const MaterialMachineEdit = () => {
                                       {change}
                                     </>
                                   ) : (
-                                    "No change"
+                                    "Sin cambio"
                                   )}
                                 </Badge>
                               </td>
-                              <td className="px-4 py-3 text-sm">{entry.comment || "No comment"}</td>
+                              <td className="px-4 py-3 text-sm">{entry.comment || "Sin comentario"}</td>
                             </tr>
                           )
                         })
                       ) : (
                         <tr>
                           <td colSpan={5} className="px-4 py-4 text-sm text-center text-muted-foreground">
-                            No history available
+                            No hay historial disponible
                           </td>
                         </tr>
                       )}
@@ -677,7 +687,7 @@ const MaterialMachineEdit = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Success animation overlay */}
+        {/* Superposición de animación de éxito */}
         {showSuccessAnimation && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <motion.div
@@ -687,11 +697,11 @@ const MaterialMachineEdit = () => {
               className="flex flex-col items-center p-8 bg-white rounded-lg dark:bg-gray-800"
             >
               <CheckCircle2 className="w-16 h-16 mb-4 text-green-500" />
-              <h2 className="text-xl font-bold">Stock Updated!</h2>
+              <h2 className="text-xl font-bold">¡Stock Actualizado!</h2>
               <p className="mt-2 text-center text-muted-foreground">
                 {stockDifference > 0
-                  ? `Added ${stockDifference} units to this machine`
-                  : `Removed ${-stockDifference} units from this machine`}
+                  ? `Se agregaron ${stockDifference} unidades a esta máquina`
+                  : `Se removieron ${-stockDifference} unidades de esta máquina`}
               </p>
             </motion.div>
           </div>

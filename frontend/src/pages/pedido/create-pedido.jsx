@@ -29,7 +29,7 @@ function CreatePedido() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Reference data
+  // Datos de referencia
   const [tipos, setTipos] = useState([])
   const [solicitantes, setSolicitantes] = useState([])
   const [tableStatuses, setTableStatuses] = useState([])
@@ -38,7 +38,7 @@ function CreatePedido() {
   const [materialSearch, setMaterialSearch] = useState("")
   const [machinesWithMaterial, setMachinesWithMaterial] = useState([])
 
-  // Initialize with default values for a new pedido
+  // Inicializar con valores por defecto para un nuevo pedido
   const [pedido, setPedido] = useState({
     tipo: "",
     descripcionInterna: "",
@@ -63,12 +63,12 @@ function CreatePedido() {
     ano: new Date().getFullYear(),
   })
 
-  // Fetch reference data on component mount
+  // Obtener datos de referencia al montar el componente
   useEffect(() => {
     const fetchReferenceData = async () => {
       setIsLoading(true)
       try {
-        // Fetch all reference data in parallel
+        // Obtener todos los datos de referencia en paralelo
         const [tiposData, solicitantesData, tableStatusesData, materialsData] = await Promise.all([
           getAllTipos(),
           getAllSolicitantes(),
@@ -82,9 +82,9 @@ function CreatePedido() {
         setMaterials(materialsData.data || [])
         setFilteredMaterials(materialsData.data || [])
 
-        // Set default values if available
+        // Establecer valores por defecto si están disponibles
         if (tableStatusesData.length > 0) {
-          // Find a default status like "Pending" or use the first one
+          // Buscar un estado por defecto como "Pendiente" o usar el primero
           const defaultStatus =
             tableStatusesData.find(
               (s) => s.name.toLowerCase().includes("pending") || s.name.toLowerCase().includes("pendiente"),
@@ -96,11 +96,11 @@ function CreatePedido() {
           }))
         }
       } catch (error) {
-        console.error("Error fetching reference data:", error)
+        console.error("Error al obtener datos de referencia:", error)
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load reference data. Please try again.",
+          description: "Error al cargar los datos de referencia. Por favor, inténtalo de nuevo.",
         })
       } finally {
         setIsLoading(false)
@@ -110,7 +110,7 @@ function CreatePedido() {
     fetchReferenceData()
   }, [toast])
 
-  // Filter materials when search term changes
+  // Filtrar materiales cuando cambia el término de búsqueda
   useEffect(() => {
     if (materialSearch.trim() === "") {
       setFilteredMaterials(materials)
@@ -128,7 +128,7 @@ function CreatePedido() {
   const handleInputChange = (e) => {
     const { name, value } = e.target
 
-    // Handle numeric fields
+    // Manejar campos numéricos
     if (["cantidad", "precioUnidad", "importePedido", "ano", "days"].includes(name)) {
       const numValue = name === "ano" || name === "days" ? Number.parseInt(value) : Number.parseFloat(value)
       setPedido((prev) => ({ ...prev, [name]: isNaN(numValue) ? 0 : numValue }))
@@ -140,7 +140,7 @@ function CreatePedido() {
   const handleSelectChange = (name, value) => {
     setPedido((prev) => ({ ...prev, [name]: value }))
 
-    // If material (referencia) is selected, fetch its details
+    // Si se selecciona material (referencia), obtener sus detalles
     if (name === "referencia" && value) {
       fetchMaterialDetails(value)
     }
@@ -150,40 +150,40 @@ function CreatePedido() {
     try {
       const material = await getMaterialById(materialId)
       if (material) {
-        // Update pedido with material details
+        // Actualizar pedido con detalles del material
         setPedido((prev) => ({
           ...prev,
           fabricante: material.manufacturer || "",
           descripcionProveedor: material.description || "",
           proveedor: material.supplier?._id || "",
           precioUnidad: material.price || 0,
-          cantidad: material.orderLot || 1, // Auto-fill quantity with orderLot
+          cantidad: material.orderLot || 1, // Auto-llenar cantidad con orderLot
         }))
 
-        // Fetch machines that have this material
+        // Obtener máquinas que tienen este material
         fetchMachinesWithMaterial(materialId)
       }
     } catch (error) {
-      console.error("Error fetching material details:", error)
+      console.error("Error al obtener detalles del material:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load material details. Please try again.",
+        description: "Error al cargar los detalles del material. Por favor, inténtalo de nuevo.",
       })
     }
   }
 
   const fetchMachinesWithMaterial = async (materialId) => {
-    // This is a placeholder - implement the actual API call to get machines with this material
+    // Esto es un placeholder - implementar la llamada API real para obtener máquinas con este material
     try {
-      // Example API call - replace with your actual implementation
+      // Ejemplo de llamada API - reemplazar con tu implementación real
       // const machines = await getMachinesWithMaterial(materialId)
       // setMachinesWithMaterial(machines)
 
-      // For now, we'll just set an empty array
+      // Por ahora, solo estableceremos un array vacío
       setMachinesWithMaterial([])
     } catch (error) {
-      console.error("Error fetching machines with material:", error)
+      console.error("Error al obtener máquinas con material:", error)
       setMachinesWithMaterial([])
     }
   }
@@ -192,7 +192,7 @@ function CreatePedido() {
     setPedido((prev) => {
       const updatedPedido = { ...prev, [name]: date }
 
-      // If acceptance date changes, calculate receiving date based on days
+      // Si cambia la fecha de aceptación, calcular fecha de recepción basada en días
       if (name === "aceptado" && date && prev.days) {
         const receivingDate = new Date(date)
         receivingDate.setDate(receivingDate.getDate() + prev.days)
@@ -208,12 +208,12 @@ function CreatePedido() {
     setPedido((prev) => ({ ...prev, importePedido: importe }))
   }
 
-  // Calculate total amount when quantity or unit price changes
+  // Calcular importe total cuando cambia cantidad o precio unitario
   useEffect(() => {
     calculateImporte()
   }, [pedido.cantidad, pedido.precioUnidad])
 
-  // Recalculate receiving date when days change
+  // Recalcular fecha de recepción cuando cambian los días
   useEffect(() => {
     if (pedido.aceptado && pedido.days) {
       const receivingDate = new Date(pedido.aceptado)
@@ -227,33 +227,33 @@ function CreatePedido() {
     setIsSaving(true)
 
     try {
-      // Validate required fields
+      // Validar campos requeridos
       if (!pedido.tipo) {
-        throw new Error("Type is required")
+        throw new Error("El tipo es requerido")
       }
       if (!pedido.referencia) {
-        throw new Error("Material reference is required")
+        throw new Error("La referencia del material es requerida")
       }
       if (!pedido.solicitante) {
-        throw new Error("Requester is required")
+        throw new Error("El solicitante es requerido")
       }
       if (!pedido.cantidad || pedido.cantidad <= 0) {
-        throw new Error("Quantity must be greater than 0")
+        throw new Error("La cantidad debe ser mayor que 0")
       }
 
-      // Create new pedido
+      // Crear nuevo pedido
       await createPedido(pedido)
       toast({
-        title: "Success",
-        description: "New order created successfully",
+        title: "Éxito",
+        description: "Nuevo pedido creado exitosamente",
       })
       navigate("/pedido")
     } catch (error) {
-      console.error("Error creating pedido:", error)
+      console.error("Error al crear pedido:", error)
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to create order. Please try again.",
+        description: error.message || "Error al crear el pedido. Por favor, inténtalo de nuevo.",
       })
     } finally {
       setIsSaving(false)
@@ -279,18 +279,18 @@ function CreatePedido() {
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Create New Order</h1>
-              <p className="text-muted-foreground">Create a new order in the system</p>
+              <h1 className="text-3xl font-bold tracking-tight">Crear Nuevo Pedido</h1>
+              <p className="text-muted-foreground">Crear un nuevo pedido en el sistema</p>
             </div>
           </div>
           <div className="flex gap-4">
             <Button variant="outline" type="button" onClick={() => navigate("/pedido")}>
-              Cancel
+              Cancelar
             </Button>
             <Button type="submit" disabled={isSaving} onClick={handleSubmit} className="px-6">
               {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               <Save className="w-4 h-4 mr-2" />
-              Create Order
+              Crear Pedido
             </Button>
           </div>
         </div>
@@ -298,10 +298,10 @@ function CreatePedido() {
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="basic" className="w-full">
             <TabsList className="justify-start w-full mb-6">
-              <TabsTrigger value="basic">Basic Information</TabsTrigger>
-              <TabsTrigger value="product">Product Details</TabsTrigger>
-              <TabsTrigger value="order">Order Details</TabsTrigger>
-              <TabsTrigger value="status">Status Information</TabsTrigger>
+              <TabsTrigger value="basic">Información Básica</TabsTrigger>
+              <TabsTrigger value="product">Detalles del Producto</TabsTrigger>
+              <TabsTrigger value="order">Detalles del Pedido</TabsTrigger>
+              <TabsTrigger value="status">Información de Estado</TabsTrigger>
             </TabsList>
 
             <ScrollArea className="h-[calc(100vh-250px)]">
@@ -309,20 +309,20 @@ function CreatePedido() {
                 <TabsContent value="basic" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Basic Information</CardTitle>
-                      <CardDescription>Enter the basic details of the order</CardDescription>
+                      <CardTitle>Información Básica</CardTitle>
+                      <CardDescription>Ingresa los detalles básicos del pedido</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="tipo">Type *</Label>
+                          <Label htmlFor="tipo">Tipo *</Label>
                           <Select
                             value={pedido.tipo}
                             onValueChange={(value) => handleSelectChange("tipo", value)}
                             required
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a type" />
+                              <SelectValue placeholder="Seleccionar un tipo" />
                             </SelectTrigger>
                             <SelectContent>
                               {tipos.map((tipo) => (
@@ -334,14 +334,14 @@ function CreatePedido() {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="solicitante">Requester *</Label>
+                          <Label htmlFor="solicitante">Solicitante *</Label>
                           <Select
                             value={pedido.solicitante}
                             onValueChange={(value) => handleSelectChange("solicitante", value)}
                             required
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a requester" />
+                              <SelectValue placeholder="Seleccionar un solicitante" />
                             </SelectTrigger>
                             <SelectContent>
                               {solicitantes.map((solicitante) => (
@@ -353,13 +353,13 @@ function CreatePedido() {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="ano">Year</Label>
+                          <Label htmlFor="ano">Año</Label>
                           <Select
                             value={pedido.ano.toString()}
                             onValueChange={(value) => handleSelectChange("ano", Number.parseInt(value))}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select year" />
+                              <SelectValue placeholder="Seleccionar año" />
                             </SelectTrigger>
                             <SelectContent>
                               {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map((year) => (
@@ -372,7 +372,7 @@ function CreatePedido() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="descripcionInterna">Internal Description</Label>
+                        <Label htmlFor="descripcionInterna">Descripción Interna</Label>
                         <Textarea
                           id="descripcionInterna"
                           name="descripcionInterna"
@@ -388,16 +388,16 @@ function CreatePedido() {
                 <TabsContent value="product" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Product Details</CardTitle>
-                      <CardDescription>Enter the details about the product being ordered</CardDescription>
+                      <CardTitle>Detalles del Producto</CardTitle>
+                      <CardDescription>Ingresa los detalles sobre el producto que se está pidiendo</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="referencia">Material (Reference) *</Label>
+                        <Label htmlFor="referencia">Material (Referencia) *</Label>
                         <div className="flex items-center gap-2 mb-2">
                           <Search className="w-4 h-4 text-muted-foreground" />
                           <Input
-                            placeholder="Search materials..."
+                            placeholder="Buscar materiales..."
                             value={materialSearch}
                             onChange={(e) => setMaterialSearch(e.target.value)}
                           />
@@ -408,7 +408,7 @@ function CreatePedido() {
                           required
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a material" />
+                            <SelectValue placeholder="Seleccionar un material" />
                           </SelectTrigger>
                           <SelectContent>
                             {filteredMaterials.map((material) => (
@@ -422,22 +422,23 @@ function CreatePedido() {
 
                       {pedido.referencia && (
                         <div className="p-4 mt-2 border rounded-md bg-muted/50">
-                          <h4 className="mb-2 font-medium">Material Details</h4>
+                          <h4 className="mb-2 font-medium">Detalles del Material</h4>
                           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                              <Label className="text-sm text-muted-foreground">Manufacturer</Label>
+                              <Label className="text-sm text-muted-foreground">Fabricante</Label>
                               <p className="font-medium">{pedido.fabricante || "N/A"}</p>
                             </div>
                             <div>
-                              <Label className="text-sm text-muted-foreground">Provider</Label>
+                              <Label className="text-sm text-muted-foreground">Proveedor</Label>
                               <p className="font-medium">
                                 {pedido.proveedor
-                                  ? materials.find((m) => m.supplier?._id === pedido.proveedor)?.supplier?.companyName || "N/A"
+                                  ? materials.find((m) => m.supplier?._id === pedido.proveedor)?.supplier
+                                      ?.companyName || "N/A"
                                   : "N/A"}
                               </p>
                             </div>
                             <div className="col-span-2">
-                              <Label className="text-sm text-muted-foreground">Description</Label>
+                              <Label className="text-sm text-muted-foreground">Descripción</Label>
                               <p className="font-medium">{pedido.descripcionProveedor || "N/A"}</p>
                             </div>
                           </div>
@@ -446,7 +447,7 @@ function CreatePedido() {
 
                       {machinesWithMaterial.length > 0 && (
                         <div className="p-4 mt-2 border rounded-md bg-muted/50">
-                          <h4 className="mb-2 font-medium">Machines with this Material</h4>
+                          <h4 className="mb-2 font-medium">Máquinas con este Material</h4>
                           <div className="flex flex-wrap gap-2">
                             {machinesWithMaterial.map((machine) => (
                               <Badge key={machine._id} variant="secondary">
@@ -459,7 +460,7 @@ function CreatePedido() {
 
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="fabricante">Manufacturer</Label>
+                          <Label htmlFor="fabricante">Fabricante</Label>
                           <Input
                             id="fabricante"
                             name="fabricante"
@@ -471,7 +472,7 @@ function CreatePedido() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="descripcionProveedor">Provider Description</Label>
+                        <Label htmlFor="descripcionProveedor">Descripción del Proveedor</Label>
                         <Textarea
                           id="descripcionProveedor"
                           name="descripcionProveedor"
@@ -489,13 +490,13 @@ function CreatePedido() {
                 <TabsContent value="order" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Order Details</CardTitle>
-                      <CardDescription>Enter the quantity, price, and other order details</CardDescription>
+                      <CardTitle>Detalles del Pedido</CardTitle>
+                      <CardDescription>Ingresa la cantidad, precio y otros detalles del pedido</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div className="space-y-2">
-                          <Label htmlFor="cantidad">Quantity *</Label>
+                          <Label htmlFor="cantidad">Cantidad *</Label>
                           <Input
                             id="cantidad"
                             name="cantidad"
@@ -507,7 +508,7 @@ function CreatePedido() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="precioUnidad">Unit Price (€)</Label>
+                          <Label htmlFor="precioUnidad">Precio Unitario (€)</Label>
                           <Input
                             id="precioUnidad"
                             name="precioUnidad"
@@ -521,7 +522,7 @@ function CreatePedido() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="importePedido">Total Amount (€)</Label>
+                          <Label htmlFor="importePedido">Importe Total (€)</Label>
                           <Input
                             id="importePedido"
                             name="importePedido"
@@ -534,12 +535,19 @@ function CreatePedido() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="fechaSolicitud">Request Date</Label>
+                        <Label htmlFor="fechaSolicitud">Fecha de Solicitud</Label>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button variant="outline" className="justify-start w-full font-normal text-left">
+                            <Button
+                              variant="outline"
+                              className="justify-start w-full font-normal text-left bg-transparent"
+                            >
                               <CalendarIcon className="w-4 h-4 mr-2" />
-                              {pedido.fechaSolicitud ? format(pedido.fechaSolicitud, "PPP") : <span>Pick a date</span>}
+                              {pedido.fechaSolicitud ? (
+                                format(pedido.fechaSolicitud, "PPP")
+                              ) : (
+                                <span>Seleccionar fecha</span>
+                              )}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0">
@@ -553,7 +561,7 @@ function CreatePedido() {
                         </Popover>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="comentario">Comments</Label>
+                        <Label htmlFor="comentario">Comentarios</Label>
                         <Textarea
                           id="comentario"
                           name="comentario"
@@ -569,19 +577,19 @@ function CreatePedido() {
                 <TabsContent value="status" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Status Information</CardTitle>
-                      <CardDescription>Enter the status details of the order</CardDescription>
+                      <CardTitle>Información de Estado</CardTitle>
+                      <CardDescription>Ingresa los detalles de estado del pedido</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="table_status">Table Status</Label>
+                          <Label htmlFor="table_status">Estado de Tabla</Label>
                           <Select
                             value={pedido.table_status}
                             onValueChange={(value) => handleSelectChange("table_status", value)}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a status" />
+                              <SelectValue placeholder="Seleccionar un estado" />
                             </SelectTrigger>
                             <SelectContent>
                               {tableStatuses.map((status) => (
@@ -593,31 +601,34 @@ function CreatePedido() {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="recepcionado">Received</Label>
+                          <Label htmlFor="recepcionado">Recibido</Label>
                           <Select
                             value={pedido.recepcionado}
                             onValueChange={(value) => handleSelectChange("recepcionado", value)}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select reception status" />
+                              <SelectValue placeholder="Seleccionar estado de recepción" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Si">Yes</SelectItem>
+                              <SelectItem value="Si">Sí</SelectItem>
                               <SelectItem value="No">No</SelectItem>
-                              <SelectItem value="Parcial">Partial</SelectItem>
+                              <SelectItem value="Parcial">Parcial</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="introducidaSAP">SAP Entry Date</Label>
+                          <Label htmlFor="introducidaSAP">Fecha de Entrada SAP</Label>
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button variant="outline" className="justify-start w-full font-normal text-left">
+                              <Button
+                                variant="outline"
+                                className="justify-start w-full font-normal text-left bg-transparent"
+                              >
                                 <CalendarIcon className="w-4 h-4 mr-2" />
                                 {pedido.introducidaSAP ? (
                                   format(pedido.introducidaSAP, "PPP")
                                 ) : (
-                                  <span>Pick a date</span>
+                                  <span>Seleccionar fecha</span>
                                 )}
                               </Button>
                             </PopoverTrigger>
@@ -632,12 +643,15 @@ function CreatePedido() {
                           </Popover>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="aceptado">Acceptance Date</Label>
+                          <Label htmlFor="aceptado">Fecha de Aceptación</Label>
                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button variant="outline" className="justify-start w-full font-normal text-left">
+                              <Button
+                                variant="outline"
+                                className="justify-start w-full font-normal text-left bg-transparent"
+                              >
                                 <CalendarIcon className="w-4 h-4 mr-2" />
-                                {pedido.aceptado ? format(pedido.aceptado, "PPP") : <span>Pick a date</span>}
+                                {pedido.aceptado ? format(pedido.aceptado, "PPP") : <span>Seleccionar fecha</span>}
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0">
@@ -651,7 +665,7 @@ function CreatePedido() {
                           </Popover>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="days">Days</Label>
+                          <Label htmlFor="days">Días</Label>
                           <Input
                             id="days"
                             name="days"
@@ -661,34 +675,34 @@ function CreatePedido() {
                             min="1"
                           />
                           <p className="mt-1 text-xs text-muted-foreground">
-                            Number of days for delivery after acceptance
+                            Número de días para entrega después de la aceptación
                           </p>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="direccion">Delivery Address</Label>
+                          <Label htmlFor="direccion">Dirección de Entrega</Label>
                           <Input
                             id="direccion"
                             name="direccion"
                             value={pedido.direccion}
                             onChange={handleInputChange}
-                            placeholder="Enter delivery address"
+                            placeholder="Ingresa la dirección de entrega"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="date_receiving">Receiving Date (Auto-calculated)</Label>
+                          <Label htmlFor="date_receiving">Fecha de Recepción (Auto-calculada)</Label>
                           <Input
                             id="date_receiving"
                             name="date_receiving"
                             value={
                               pedido.date_receiving
                                 ? format(new Date(pedido.date_receiving), "PPP")
-                                : "Will be calculated after acceptance"
+                                : "Se calculará después de la aceptación"
                             }
                             readOnly
                             className="bg-muted"
                           />
                           <p className="mt-1 text-xs text-muted-foreground">
-                            This date is calculated as acceptance date + delivery days
+                            Esta fecha se calcula como fecha de aceptación + días de entrega
                           </p>
                         </div>
                       </div>

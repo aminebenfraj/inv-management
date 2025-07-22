@@ -64,12 +64,12 @@ const EditFactory = () => {
       setFactory(factoryData)
       setOriginalFactory(factoryData)
     } catch (error) {
-      console.error("Failed to fetch factory:", error)
-      setError("Failed to fetch factory details")
+      console.error("Error al obtener fábrica:", error)
+      setError("Error al obtener los detalles de la fábrica")
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch factory details. Redirecting to factories list.",
+        description: "Error al obtener los detalles de la fábrica. Redirigiendo a la lista de fábricas.",
       })
       setTimeout(() => navigate("/factories"), 2000)
     } finally {
@@ -81,15 +81,14 @@ const EditFactory = () => {
     try {
       setLoadingUsers(true)
       const userData = await getAllUsers()
-      // Handle different possible response structures
       const usersArray = Array.isArray(userData) ? userData : userData.data || userData.users || []
       setUsers(usersArray)
     } catch (error) {
-      console.error("Failed to fetch users:", error)
-      setUsers([]) // Ensure users is always an array
+      console.error("Error al obtener usuarios:", error)
+      setUsers([])
       toast({
-        title: "Warning",
-        description: "Failed to load users for manager selection",
+        title: "Advertencia",
+        description: "Error al cargar usuarios para la selección de gerente",
         variant: "destructive",
       })
     } finally {
@@ -119,9 +118,9 @@ const EditFactory = () => {
     const newErrors = {}
 
     if (!factory.name.trim()) {
-      newErrors.name = "Factory name is required"
+      newErrors.name = "El nombre de la fábrica es requerido"
     } else if (factory.name.length < 3) {
-      newErrors.name = "Factory name must be at least 3 characters"
+      newErrors.name = "El nombre de la fábrica debe tener al menos 3 caracteres"
     }
 
     setErrors(newErrors)
@@ -145,16 +144,16 @@ const EditFactory = () => {
 
       await updateFactory(id, factoryData)
       toast({
-        title: "Success",
-        description: "Factory updated successfully!",
+        title: "Éxito",
+        description: "¡Fábrica actualizada exitosamente!",
         variant: "default",
       })
       setTimeout(() => navigate("/factories"), 1500)
     } catch (error) {
-      console.error("Failed to update factory:", error)
+      console.error("Error al actualizar fábrica:", error)
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to update factory. Please try again.",
+        description: error.response?.data?.message || "Error al actualizar fábrica. Por favor, inténtalo de nuevo.",
         variant: "destructive",
       })
     } finally {
@@ -186,21 +185,21 @@ const EditFactory = () => {
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-green-700 border-green-200 bg-green-50">
             <CheckCircle className="w-3 h-3" />
-            Active
+            Activa
           </Badge>
         )
       case "inactive":
         return (
           <Badge variant="outline" className="flex items-center gap-1 text-red-700 border-red-200 bg-red-50">
             <PowerOff className="w-3 h-3" />
-            Inactive
+            Inactiva
           </Badge>
         )
       case "maintenance":
         return (
           <Badge variant="outline" className="flex items-center gap-1 bg-amber-50 text-amber-700 border-amber-200">
             <Wrench className="w-3 h-3" />
-            Maintenance
+            Mantenimiento
           </Badge>
         )
       default:
@@ -220,14 +219,14 @@ const EditFactory = () => {
           <div className="flex items-center mb-6">
             <Button variant="ghost" onClick={() => navigate("/factories")} className="mr-auto">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Factories
+              Volver a Fábricas
             </Button>
           </div>
 
           <Card className="shadow-lg border-zinc-200 dark:border-zinc-700">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Edit Factory</CardTitle>
-              <CardDescription>Update factory information</CardDescription>
+              <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Editar Fábrica</CardTitle>
+              <CardDescription>Actualizar información de la fábrica</CardDescription>
             </CardHeader>
 
             {loading ? (
@@ -258,62 +257,60 @@ const EditFactory = () => {
               <form onSubmit={handleSubmit}>
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    {/* Basic Information */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Basic Information</h3>
+                      <h3 className="text-lg font-medium">Información Básica</h3>
 
                       <div className="space-y-2">
                         <Label htmlFor="name" className={errors.name ? "text-red-500" : ""}>
-                          Factory Name <span className="text-red-500">*</span>
+                          Nombre de la Fábrica <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="name"
                           name="name"
                           value={factory.name}
                           onChange={handleChange}
-                          placeholder="Enter factory name"
+                          placeholder="Ingresa el nombre de la fábrica"
                           className={errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}
                         />
                         {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
+                        <Label htmlFor="description">Descripción</Label>
                         <Textarea
                           id="description"
                           name="description"
                           value={factory.description}
                           onChange={handleChange}
-                          placeholder="Enter factory description"
+                          placeholder="Ingresa la descripción de la fábrica"
                           rows={4}
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="status">Status</Label>
+                        <Label htmlFor="status">Estado</Label>
                         <Select
                           name="status"
                           value={factory.status}
                           onValueChange={(value) => handleChange({ target: { name: "status", value } })}
                         >
                           <SelectTrigger id="status" className="w-full">
-                            <SelectValue placeholder="Select status" />
+                            <SelectValue placeholder="Seleccionar estado" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="inactive">Inactive</SelectItem>
-                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="active">Activa</SelectItem>
+                            <SelectItem value="inactive">Inactiva</SelectItem>
+                            <SelectItem value="maintenance">Mantenimiento</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
 
-                    {/* Management */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Management</h3>
+                      <h3 className="text-lg font-medium">Gestión</h3>
 
                       <div className="space-y-2">
-                        <Label htmlFor="manager">Factory Manager</Label>
+                        <Label htmlFor="manager">Gerente de Fábrica</Label>
                         <Select
                           name="manager"
                           value={factory.manager}
@@ -321,10 +318,10 @@ const EditFactory = () => {
                           disabled={loadingUsers}
                         >
                           <SelectTrigger id="manager" className="w-full">
-                            <SelectValue placeholder={loadingUsers ? "Loading users..." : "Select manager"} />
+                            <SelectValue placeholder={loadingUsers ? "Cargando usuarios..." : "Seleccionar gerente"} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">No Manager</SelectItem>
+                            <SelectItem value="none">Sin Gerente</SelectItem>
                             {users.map((user) => (
                               <SelectItem key={user._id} value={user._id}>
                                 {user.username} ({user.email})
@@ -335,12 +332,12 @@ const EditFactory = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Authorized Users</Label>
+                        <Label>Usuarios Autorizados</Label>
                         <div className="p-3 overflow-y-auto border rounded-md max-h-48">
                           {loadingUsers ? (
-                            <p className="text-sm text-muted-foreground">Loading users...</p>
+                            <p className="text-sm text-muted-foreground">Cargando usuarios...</p>
                           ) : users.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No users available</p>
+                            <p className="text-sm text-muted-foreground">No hay usuarios disponibles</p>
                           ) : (
                             <div className="space-y-2">
                               {Array.isArray(users) && users.length > 0 ? (
@@ -364,7 +361,7 @@ const EditFactory = () => {
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-sm text-muted-foreground">No users available</p>
+                                <p className="text-sm text-muted-foreground">No hay usuarios disponibles</p>
                               )}
                             </div>
                           )}
@@ -376,13 +373,13 @@ const EditFactory = () => {
                   <Separator />
 
                   <div className="p-4 border rounded-md bg-muted/30">
-                    <h3 className="mb-3 font-medium">Factory Preview</h3>
+                    <h3 className="mb-3 font-medium">Vista Previa de la Fábrica</h3>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">{factory.name || "Factory Name"}</p>
+                          <p className="font-medium">{factory.name || "Nombre de la Fábrica"}</p>
                           <p className="mt-1 text-sm text-muted-foreground">
-                            {factory.description || "No description provided"}
+                            {factory.description || "La descripción de la fábrica aparecerá aquí"}
                           </p>
                         </div>
                         {getStatusBadge(factory.status)}
@@ -393,14 +390,17 @@ const EditFactory = () => {
                           {factory.manager && (
                             <div className="flex items-center gap-2 mb-2">
                               <UserCheck className="w-4 h-4 text-blue-500" />
-                              <span className="text-sm">Manager: {getSelectedManager()?.username || "Loading..."}</span>
+                              <span className="text-sm">
+                                Gerente: {getSelectedManager()?.username || "Cargando..."}
+                              </span>
                             </div>
                           )}
                           {factory.authorizedUsers.length > 0 && (
                             <div className="flex items-center gap-2">
                               <Users className="w-4 h-4 text-green-500" />
                               <span className="text-sm">
-                                {factory.authorizedUsers.length} authorized user
+                                {factory.authorizedUsers.length} usuario
+                                {factory.authorizedUsers.length !== 1 ? "s" : ""} autorizado
                                 {factory.authorizedUsers.length !== 1 ? "s" : ""}
                               </span>
                             </div>
@@ -412,9 +412,9 @@ const EditFactory = () => {
 
                   {hasChanges() && (
                     <div className="flex items-center p-3 border border-blue-200 rounded-md bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
-                      <div className="flex-1 text-sm text-blue-700 dark:text-blue-300">You have unsaved changes</div>
+                      <div className="flex-1 text-sm text-blue-700 dark:text-blue-300">Tienes cambios sin guardar</div>
                       <Button type="button" variant="outline" size="sm" onClick={resetForm}>
-                        Reset
+                        Restablecer
                       </Button>
                     </div>
                   )}
@@ -424,7 +424,7 @@ const EditFactory = () => {
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <Button type="button" variant="outline" onClick={() => navigate("/factories")}>
                       <ArrowLeft className="w-4 h-4 mr-2" />
-                      Cancel
+                      Cancelar
                     </Button>
                   </motion.div>
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -436,12 +436,12 @@ const EditFactory = () => {
                       {isSubmitting ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Updating...
+                          Actualizando...
                         </>
                       ) : (
                         <>
                           <Save className="w-4 h-4 mr-2" />
-                          Update Factory
+                          Actualizar Fábrica
                         </>
                       )}
                     </Button>
