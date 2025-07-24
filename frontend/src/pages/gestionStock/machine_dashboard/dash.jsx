@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { getUserFactories } from "@/apis/gestionStockApi/factoryApi"
+import { getUserFactories, getAllFactories } from "@/apis/gestionStockApi/factoryApi"
 import { getCurrentUser } from "@/apis/userApi"
 import { getAllMachines } from "@/apis/gestionStockApi/machineApi"
 import { getAllMaterials } from "@/apis/gestionStockApi/materialApi"
@@ -246,27 +246,13 @@ const EnhancedFactoryDashboard = () => {
     ],
   }
 
-  useEffect(() => {
-    fetchUserAndFactories()
-  }, [])
-
-  useEffect(() => {
-    if (selectedFactory) {
-      fetchFactoryData()
-    }
-  }, [selectedFactory, timeRange])
-
   const fetchUserAndFactories = async () => {
     try {
       setIsLoading(true)
 
-      // Fetch current user and factories in parallel
-      const [userResponse, factoriesResponse] = await Promise.all([getCurrentUser(), getUserFactories()])
-
+      // Fetch current user first
+      const userResponse = await getCurrentUser()
       console.log("User response:", userResponse)
-      console.log("Factories response:", factoriesResponse)
-
-      // Set current user
       setCurrentUser(userResponse)
 
       // Determine user role based on roles array
@@ -274,8 +260,33 @@ const EnhancedFactoryDashboard = () => {
       const isUserAdmin = userRoles.includes("Admin")
       setUserRole(isUserAdmin ? "admin" : "user")
 
-      // Handle factories response
-      const factoriesArray = Array.isArray(factoriesResponse) ? factoriesResponse : factoriesResponse?.data || []
+      // For admin users, fetch ALL factories, for regular users fetch only their authorized factories
+      let factoriesResponse
+      if (isUserAdmin) {
+        console.log("Admin user detected, fetching all factories...")
+        factoriesResponse = await getAllFactories() // Admin gets all factories
+      } else {
+        console.log("Regular user detected, fetching user factories...")
+        factoriesResponse = await getUserFactories() // Regular user gets only authorized factories
+      }
+
+      console.log("Factories response:", factoriesResponse)
+
+      // Handle factories response - check both data property and direct array
+      let factoriesArray = []
+
+      if (Array.isArray(factoriesResponse)) {
+        factoriesArray = factoriesResponse
+      } else if (factoriesResponse?.data && Array.isArray(factoriesResponse.data)) {
+        factoriesArray = factoriesResponse.data
+      } else if (factoriesResponse && typeof factoriesResponse === "object") {
+        // If it's an object with pagination info, extract the data
+        factoriesArray = factoriesResponse.data || []
+      }
+
+      console.log("Processed factories array:", factoriesArray)
+      console.log("Number of factories found:", factoriesArray.length)
+      console.log("User is admin:", isUserAdmin)
 
       setFactories(factoriesArray)
 
@@ -285,6 +296,20 @@ const EnhancedFactoryDashboard = () => {
         toast({
           title: "Factory Auto-Selected",
           description: `Viewing data for ${factoriesArray[0].name}`,
+        })
+      }
+
+      // Show info about factory access
+      if (factoriesArray.length === 0) {
+        toast({
+          title: "No Factory Access",
+          description: "You don't have access to any factories. Contact your administrator.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Factories Loaded",
+          description: `Found ${factoriesArray.length} accessible factories${isUserAdmin ? " (Admin access)" : ""}`,
         })
       }
     } catch (error) {
@@ -299,13 +324,23 @@ const EnhancedFactoryDashboard = () => {
     }
   }
 
+  useEffect(() => {
+    fetchUserAndFactories()
+  }, [])
+
+  useEffect(() => {
+    if (selectedFactory) {
+      fetchFactoryData()
+    }
+  }, [selectedFactory, timeRange])
+
   const fetchFactoryData = async () => {
     try {
       setIsLoadingData(true)
 
       const [machinesData, materialsData, allocationsData] = await Promise.all([
-        getAllMachines(1, 100),
-        getAllMaterials(1, 100),
+        getAllMachines(1, 50), // Changed from 100 to 50
+        getAllMaterials(1, 50), // Changed from 100 to 50
         getAllAllocations(),
       ])
 
@@ -361,6 +396,31 @@ const EnhancedFactoryDashboard = () => {
       title: "Factory Selected",
       description: `Now viewing data for ${factory.name}`,
     })
+  }
+
+  // Navigation functions with factory context
+  const navigateToMachines = () => {
+    if (selectedFactory) {
+      navigate(`/machines?factory=${selectedFactory._id}`)
+    } else {
+      navigate("/machines")
+    }
+  }
+
+  const navigateToMaterials = () => {
+    if (selectedFactory) {
+      navigate(`/materials?factory=${selectedFactory._id}`)
+    } else {
+      navigate("/materials")
+    }
+  }
+
+  const navigateToAllocations = () => {
+    if (selectedFactory) {
+      navigate(`/allocations?factory=${selectedFactory._id}`)
+    } else {
+      navigate("/allocations")
+    }
   }
 
   const exportData = () => {
@@ -419,7 +479,7 @@ const EnhancedFactoryDashboard = () => {
               <div className="flex items-center justify-center gap-2 mt-2">
                 <Shield className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm capitalize text-muted-foreground">
-                  Access Level: {isAdmin ? "Admin" : "User"}
+                  Access Level: {isAdmin ? "Admin" : "User"} • {factories.length} factories available
                 </span>
               </div>
             </div>
@@ -1092,7 +1152,7 @@ const EnhancedFactoryDashboard = () => {
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Card
                   className="transition-all duration-300 cursor-pointer hover:shadow-lg"
-                  onClick={() => navigate("/machines")}
+                  onClick={navigateToMachines}
                 >
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -1129,7 +1189,7 @@ const EnhancedFactoryDashboard = () => {
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Card
                   className="transition-all duration-300 cursor-pointer hover:shadow-lg"
-                  onClick={() => navigate("/materials")}
+                  onClick={navigateToMaterials}
                 >
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -1168,7 +1228,7 @@ const EnhancedFactoryDashboard = () => {
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Card
                   className="transition-all duration-300 cursor-pointer hover:shadow-lg"
-                  onClick={() => navigate("/machinematerial")}
+                  onClick={navigateToAllocations}
                 >
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">

@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams, Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { getAllMachines, deleteMachine } from "@/apis/gestionStockApi/machineApi"
-import { getAllFactories } from "@/apis/gestionStockApi/factoryApi"
+import { getMachinesByFactory, getAllMachines, deleteMachine } from "@/apis/gestionStockApi/machineApi"
+import { getUserFactories } from "@/apis/gestionStockApi/factoryApi"
 import { getAllAllocations } from "@/apis/gestionStockApi/materialMachineApi"
+import { getCurrentUser } from "@/apis/userApi"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -45,6 +46,9 @@ import {
   PowerOff,
   Loader2,
   Building2,
+  AlertTriangle,
+  RefreshCw,
+  ChevronRight,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import MainLayout from "@/components/MainLayout"
@@ -58,56 +62,179 @@ const MachinesPage = () => {
   const [machines, setMachines] = useState([])
   const [allocations, setAllocations] = useState([])
   const [factory, setFactory] = useState(null)
+  const [userFactories, setUserFactories] = useState([])
+  const [currentUser, setCurrentUser] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [machineToDelete, setMachineToDelete] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [hasMoreData, setHasMoreData] = useState(false)
+  const [isLoadingData, setIsLoadingData] = useState(false)
+
+  // Check if user is admin
+  const isAdmin = currentUser?.roles?.includes("Admin") || false
 
   useEffect(() => {
-    fetchData()
-  }, [factoryId])
+    fetchInitialData()
+  }, [])
 
-  const fetchData = async () => {
+  const fetchInitialData = async () => {
     try {
       setIsLoading(true)
 
-      const [machinesData, allocationsData, factoriesData] = await Promise.all([
-        getAllMachines(1, 100),
-        getAllAllocations(),
-        getAllFactories(),
-      ])
+      // If no factory ID in URL, redirect to dashboard
+      if (!factoryId) {
+        toast({
+          title: "No Factory Selected",
+          description: "Please select a factory from the dashboard first.",
+          variant: "destructive",
+        })
+        navigate("/dashboard")
+        return
+      }
 
-      let filteredMachines = machinesData?.data || []
-      // Handle different allocations response formats
-      let filteredAllocations = []
+      // Fetch user info and authorized factories
+      const [userResponse, userFactoriesResponse] = await Promise.all([getCurrentUser(), getUserFactories()])
+
+      setCurrentUser(userResponse)
+
+      // Handle factories response
+      const factoriesArray = Array.isArray(userFactoriesResponse)
+        ? userFactoriesResponse
+        : userFactoriesResponse?.data || []
+
+      setUserFactories(factoriesArray)
+
+      // Determine if user is admin
+      const userIsAdmin = userResponse?.roles?.includes("Admin") || false
+
+      let selectedFactory = null
+      let machinesData = null
+
+      if (factoryId === "all") {
+        // Admin viewing all factories
+        if (userIsAdmin) {
+          selectedFactory = { name: "All Factories", _id: "all" }
+          // Get all machines for admin
+          const allMachinesResponse = await getAllMachines(1, 50)
+          machinesData = allMachinesResponse
+        } else {
+          // Non-admin users should only see machines from their authorized factories
+          selectedFactory = { name: "Your Authorized Factories", _id: "all" }
+          // Get all machines and filter by user's authorized factories
+          const allMachinesResponse = await getAllMachines(1, 50)
+          const authorizedFactoryIds = factoriesArray.map((f) => f._id)
+
+          if (allMachinesResponse?.data) {
+            const filteredMachines = allMachinesResponse.data.filter(
+              (machine) => machine.factory && authorizedFactoryIds.includes(machine.factory._id),
+            )
+            machinesData = {
+              ...allMachinesResponse,
+              data: filteredMachines,
+              total: filteredMachines.length,
+            }
+          }
+        }
+      } else {
+        // Specific factory selected - use the new dedicated endpoint
+        selectedFactory = factoriesArray.find((f) => f._id === factoryId)
+
+        // Verify user has access to this factory
+        if (!userIsAdmin && !selectedFactory) {
+          toast({
+            title: "Access Denied",
+            description: "You don't have access to this factory.",
+            variant: "destructive",
+          })
+          navigate("/dashboard")
+          return
+        }
+
+        // If admin but factory not in their list, create placeholder
+        if (!selectedFactory && userIsAdmin) {
+          selectedFactory = {
+            name: `Factory ${factoryId}`,
+            _id: factoryId,
+          }
+        }
+
+        // Fetch machines for specific factory using the new dedicated endpoint
+        try {
+          machinesData = await getMachinesByFactory(factoryId, 1, 50)
+
+          // If the API returned factory info, use it to update selectedFactory
+          if (machinesData?.factory) {
+            selectedFactory = {
+              ...selectedFactory,
+              name: machinesData.factory.name,
+              description: machinesData.factory.description,
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching machines for factory:", error)
+
+          // If factory not found or access denied
+          if (error.response?.status === 404) {
+            toast({
+              title: "Factory Not Found",
+              description: "The selected factory could not be found.",
+              variant: "destructive",
+            })
+          } else if (error.response?.status === 403) {
+            toast({
+              title: "Access Denied",
+              description: "You don't have access to this factory.",
+              variant: "destructive",
+            })
+          } else {
+            toast({
+              title: "Error",
+              description: "Failed to fetch machines for this factory.",
+              variant: "destructive",
+            })
+          }
+
+          navigate("/dashboard")
+          return
+        }
+      }
+
+      // Set factory and machines
+      setFactory(selectedFactory)
+      setMachines(machinesData?.data || [])
+
+      // Fetch allocations
+      const allocationsData = await getAllAllocations()
+      let allocationsArray = []
       if (allocationsData && allocationsData.data && Array.isArray(allocationsData.data)) {
-        // Paginated response format
-        filteredAllocations = allocationsData.data
+        allocationsArray = allocationsData.data
       } else if (Array.isArray(allocationsData)) {
-        // Direct array response format
-        filteredAllocations = allocationsData
-      } else {
-        // Fallback to empty array if format is unexpected
-        filteredAllocations = []
-        console.warn("Unexpected allocations response format:", allocationsData)
+        allocationsArray = allocationsData
       }
 
-      if (factoryId && factoryId !== "all") {
-        filteredMachines = filteredMachines.filter((machine) => machine.factory?._id === factoryId)
-        filteredAllocations = filteredAllocations.filter((allocation) => allocation.machine?.factory?._id === factoryId)
-
-        const factoryData = Array.isArray(factoriesData) ? factoriesData : factoriesData?.data || []
-        const currentFactory = factoryData.find((f) => f._id === factoryId)
-        setFactory(currentFactory)
-      } else {
-        setFactory({ name: "All Factories", _id: "all" })
-      }
-
-      setMachines(filteredMachines)
+      // Filter allocations for the current machines
+      const machineIds = (machinesData?.data || []).map((m) => m._id)
+      const filteredAllocations = allocationsArray.filter(
+        (allocation) => allocation.machine && machineIds.includes(allocation.machine._id),
+      )
       setAllocations(filteredAllocations)
+
+      console.log(`Loaded ${machinesData?.data?.length || 0} machines for factory:`, selectedFactory?.name)
+
+      toast({
+        title: "Machines Loaded",
+        description: `Found ${machinesData?.data?.length || 0} machines for ${selectedFactory?.name}`,
+      })
+
+      setCurrentPage(1)
+      setTotalPages(machinesData?.totalPages || 1)
+      setHasMoreData((machinesData?.totalPages || 1) > 1)
     } catch (error) {
-      console.error("Error fetching data:", error)
+      console.error("Error fetching machines data:", error)
       toast({
         title: "Error",
         description: "Failed to fetch machines data",
@@ -116,6 +243,10 @@ const MachinesPage = () => {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const refreshData = () => {
+    fetchInitialData()
   }
 
   const getStatusColor = (status) => {
@@ -148,13 +279,48 @@ const MachinesPage = () => {
     return allocations.filter((allocation) => allocation.machine?._id === machineId)
   }
 
-  const filteredMachines = machines.filter((machine) => {
-    const matchesSearch =
-      machine.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      machine.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || machine.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+  const searchMachinesInFactory = async (searchTerm, statusFilter) => {
+    if (!factoryId || factoryId === "all") return
+
+    try {
+      const machinesData = await getMachinesByFactory(factoryId, 1, 1000, searchTerm, statusFilter)
+      setMachines(machinesData?.data || [])
+
+      toast({
+        title: "Search Complete",
+        description: `Found ${machinesData?.data?.length || 0} machines matching your criteria`,
+      })
+    } catch (error) {
+      console.error("Error searching machines:", error)
+      toast({
+        title: "Search Error",
+        description: "Failed to search machines",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Add debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (factoryId && factoryId !== "all") {
+        searchMachinesInFactory(searchTerm, statusFilter === "all" ? "" : statusFilter)
+      }
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [searchTerm, statusFilter, factoryId])
+
+  const filteredMachines =
+    factoryId === "all"
+      ? machines.filter((machine) => {
+          const matchesSearch =
+            machine.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            machine.description?.toLowerCase().includes(searchTerm.toLowerCase())
+          const matchesStatus = statusFilter === "all" || machine.status === statusFilter
+          return matchesSearch && matchesStatus
+        })
+      : machines // For specific factories, filtering is done server-side
 
   const confirmDelete = (machine) => {
     setMachineToDelete(machine)
@@ -166,7 +332,10 @@ const MachinesPage = () => {
 
     try {
       await deleteMachine(machineToDelete._id)
+
+      // Remove from local state
       setMachines(machines.filter((machine) => machine._id !== machineToDelete._id))
+
       toast({
         title: "Success",
         description: "Machine deleted successfully",
@@ -184,12 +353,74 @@ const MachinesPage = () => {
     }
   }
 
+  const handleCreateMachine = () => {
+    // Pass factory ID to create page if specific factory is selected
+    if (factoryId && factoryId !== "all") {
+      navigate(`/machines/create?factory=${factoryId}`)
+    } else {
+      navigate("/machines/create")
+    }
+  }
+
+  const loadMoreMachines = async () => {
+    if (!hasMoreData || isLoadingData) return
+
+    try {
+      setIsLoadingData(true)
+      const nextPage = currentPage + 1
+
+      let additionalData
+      if (factoryId === "all") {
+        additionalData = await getAllMachines(nextPage, 50)
+      } else {
+        additionalData = await getMachinesByFactory(factoryId, nextPage, 50)
+      }
+
+      if (additionalData?.data?.length > 0) {
+        setMachines((prev) => [...prev, ...additionalData.data])
+        setCurrentPage(nextPage)
+        setHasMoreData(nextPage < additionalData.totalPages)
+      } else {
+        setHasMoreData(false)
+      }
+    } catch (error) {
+      console.error("Error loading more machines:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load more machines",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoadingData(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin" />
           <span className="ml-2">Loading machines...</span>
+        </div>
+      </MainLayout>
+    )
+  }
+
+  if (!factory) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-amber-500" />
+            <h3 className="mb-2 text-lg font-medium">Factory Not Found</h3>
+            <p className="mb-4 text-muted-foreground">
+              The selected factory could not be found or you don't have access to it.
+            </p>
+            <Button onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
       </MainLayout>
     )
@@ -208,19 +439,44 @@ const MachinesPage = () => {
             <div>
               <h1 className="text-3xl font-bold">Machines Management</h1>
               <p className="text-muted-foreground">
-                {factory?.name} - {filteredMachines.length} machines
+                <Building2 className="inline w-4 h-4 mr-1" />
+                {filteredMachines.length} machines found
               </p>
             </div>
           </div>
           <div className="flex gap-2">
-            <Button asChild>
-              <Link to="/machines/create">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Machine
-              </Link>
+            <Button variant="outline" onClick={refreshData}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+            <Button onClick={handleCreateMachine}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Machine
             </Button>
           </div>
         </div>
+
+        {/* Factory Info Card */}
+        {factoryId !== "all" && (
+          <Card className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100/50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full">
+                  <Building2 className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-blue-900">Selected Factory</h3>
+                  <p className="text-sm text-blue-700">{factory.name}</p>
+                </div>
+                <div className="ml-auto">
+                  <Badge variant="outline" className="text-blue-700 border-blue-300 bg-blue-50">
+                    {machines.length} Machines
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats Cards */}
         <div className="grid gap-4 mb-6 md:grid-cols-4">
@@ -319,6 +575,7 @@ const MachinesPage = () => {
             <CardTitle>Machines List</CardTitle>
             <CardDescription>
               {filteredMachines.length} of {machines.length} machines
+              {factoryId !== "all" && ` in ${factory.name}`}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -405,18 +662,34 @@ const MachinesPage = () => {
                 <p className="mb-4 text-muted-foreground">
                   {searchTerm || statusFilter !== "all"
                     ? "Try adjusting your search or filters"
-                    : "Add your first machine to get started"}
+                    : `No machines found for ${factory.name}. Add your first machine to get started.`}
                 </p>
-                <Button asChild>
-                  <Link to="/machines/create">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Machine
-                  </Link>
+                <Button onClick={handleCreateMachine}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Machine
                 </Button>
               </div>
             )}
           </CardContent>
         </Card>
+
+        {hasMoreData && (
+          <div className="flex justify-center mt-6">
+            <Button onClick={loadMoreMachines} disabled={isLoadingData} variant="outline">
+              {isLoadingData ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Loading More...
+                </>
+              ) : (
+                <>
+                  Load More Machines
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
+          </div>
+        )}
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

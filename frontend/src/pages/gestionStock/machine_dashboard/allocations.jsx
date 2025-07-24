@@ -3,7 +3,12 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams, Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import { getAllAllocations, deleteAllocation, updateAllocation } from "@/apis/gestionStockApi/materialMachineApi"
+import {
+  getAllAllocations,
+  deleteAllocation,
+  updateAllocation,
+  getAllocationsByFactory,
+} from "@/apis/gestionStockApi/materialMachineApi"
 import { getAllFactories } from "@/apis/gestionStockApi/factoryApi"
 import { getAllMaterials } from "@/apis/gestionStockApi/materialApi"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -80,39 +85,61 @@ const AllocationsPage = () => {
     try {
       setIsLoading(true)
 
-      const [allocationsData, materialsData, factoriesData] = await Promise.all([
-        getAllAllocations(),
-        getAllMaterials(1, 100),
-        getAllFactories(),
-      ])
-
-      // Handle different allocations response formats
-      let filteredAllocations = []
-      if (allocationsData && allocationsData.data && Array.isArray(allocationsData.data)) {
-        // Paginated response format
-        filteredAllocations = allocationsData.data
-      } else if (Array.isArray(allocationsData)) {
-        // Direct array response format
-        filteredAllocations = allocationsData
-      } else {
-        // Fallback to empty array if format is unexpected
-        filteredAllocations = []
-        console.warn("Unexpected allocations response format:", allocationsData)
-      }
+      // Use factory-specific API calls when factoryId is provided
+      let allocationsData, materialsData, factoriesData
 
       if (factoryId && factoryId !== "all") {
-        filteredAllocations = filteredAllocations.filter((allocation) => allocation.machine?.factory?._id === factoryId)
+        // Fetch factory-specific data
+        const [factoryAllocationsData, allMaterialsData, allFactoriesData] = await Promise.all([
+          getAllocationsByFactory(factoryId, 1, 50), // Use factory-specific API
+          getAllMaterials(1, 50), // Get all materials for reference
+          getAllFactories(),
+        ])
 
+        allocationsData = factoryAllocationsData
+        materialsData = allMaterialsData
+        factoriesData = allFactoriesData
+
+        // Find the current factory
         const factoryData = Array.isArray(factoriesData) ? factoriesData : factoriesData?.data || []
         const currentFactory = factoryData.find((f) => f._id === factoryId)
         setFactory(currentFactory)
+
+        console.log(`Loaded ${allocationsData?.data?.length || 0} allocations for factory: ${currentFactory?.name}`)
       } else {
+        // Fetch all data for admin view
+        const [allAllocationsData, allMaterialsData, allFactoriesData] = await Promise.all([
+          getAllAllocations(1, 50),
+          getAllMaterials(1, 50),
+          getAllFactories(),
+        ])
+
+        allocationsData = allAllocationsData
+        materialsData = allMaterialsData
+        factoriesData = allFactoriesData
         setFactory({ name: "All Factories", _id: "all" })
+
+        console.log(`Loaded ${allocationsData?.data?.length || 0} allocations from all factories`)
       }
 
-      setAllocations(filteredAllocations)
+      // Process allocations data
+      let filteredAllocations = []
+      if (allocationsData && allocationsData.data && Array.isArray(allocationsData.data)) {
+        filteredAllocations = allocationsData.data
+      } else if (Array.isArray(allocationsData)) {
+        filteredAllocations = allocationsData
+      }
+
+      // Process materials data
       const filteredMaterials = materialsData?.data || []
+
+      setAllocations(filteredAllocations)
       setMaterials(filteredMaterials)
+
+      toast({
+        title: "Allocations Loaded",
+        description: `Found ${filteredAllocations.length} allocations${factory?.name ? ` for ${factory.name}` : ""}`,
+      })
     } catch (error) {
       console.error("Error fetching data:", error)
       toast({
@@ -184,6 +211,7 @@ const AllocationsPage = () => {
       await updateAllocation(editingAllocation._id, {
         allocatedStock: Number.parseInt(newStockValue),
         comment: `Quick update from dashboard`,
+        factory: factoryId && factoryId !== "all" ? factoryId : undefined,
       })
 
       // Update local state
@@ -238,12 +266,18 @@ const AllocationsPage = () => {
               <h1 className="text-3xl font-bold">Material Allocations</h1>
               <p className="text-muted-foreground">
                 {factory?.name} - {filteredAllocations.length} allocations
+                {factoryId && factoryId !== "all" && (
+                  <Badge variant="outline" className="ml-2">
+                    <Building2 className="w-3 h-3 mr-1" />
+                    Factory Filtered
+                  </Badge>
+                )}
               </p>
             </div>
           </div>
           <div className="flex gap-2">
             <Button asChild>
-              <Link to="/machinematerial/create">
+              <Link to={`/machinematerial/create${factoryId ? `?factory=${factoryId}` : ""}`}>
                 <Plus className="w-4 h-4 mr-2" />
                 New Allocation
               </Link>
@@ -321,6 +355,7 @@ const AllocationsPage = () => {
             <CardTitle>Allocations List</CardTitle>
             <CardDescription>
               {filteredAllocations.length} of {allocations.length} allocations
+              {factoryId && factoryId !== "all" && ` in ${factory?.name}`}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -416,10 +451,14 @@ const AllocationsPage = () => {
                 <Layers className="w-12 h-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
                 <h3 className="mb-2 text-lg font-medium">No allocations found</h3>
                 <p className="mb-4 text-muted-foreground">
-                  {searchTerm ? "Try adjusting your search terms" : "Create your first allocation to get started"}
+                  {searchTerm
+                    ? "Try adjusting your search terms"
+                    : factoryId && factoryId !== "all"
+                      ? `No allocations found for ${factory?.name}`
+                      : "Create your first allocation to get started"}
                 </p>
                 <Button asChild>
-                  <Link to="/machinematerial/create">
+                  <Link to={`/machinematerial/create${factoryId ? `?factory=${factoryId}` : ""}`}>
                     <Plus className="w-4 h-4 mr-2" />
                     New Allocation
                   </Link>

@@ -135,7 +135,7 @@ function App() {
           }
         />
 
-        {/* Factory Dashboard Routes - Admin and Manager can access */}
+        {/* Factory Dashboard Routes - All users can access */}
         <Route
           path="/dashboard"
           element={
@@ -144,26 +144,28 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Dashboard-specific machine routes with factory context */}
         <Route
-          path="/dashboard/machines"
+          path="/machines"
           element={
-            <ProtectedRoute requiredRoles={adminManagerRoles}>
+            <ProtectedRoute requiredRoles={factoryOnlyRoles}>
               <MachinesPage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/dashboard/materials"
+          path="/materials"
           element={
-            <ProtectedRoute requiredRoles={adminManagerRoles}>
+            <ProtectedRoute requiredRoles={factoryOnlyRoles}>
               <MaterialsPage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/dashboard/allocations"
+          path="/allocations"
           element={
-            <ProtectedRoute requiredRoles={adminManagerRoles}>
+            <ProtectedRoute requiredRoles={factoryOnlyRoles}>
               <AllocationsPage />
             </ProtectedRoute>
           }
@@ -255,15 +257,41 @@ function App() {
           }
         />
 
-        {/* Machines routes - Admin and Manager only */}
+        {/* Legacy Machines routes - Admin and Manager only (for backward compatibility) */}
         <Route
-          path="machines"
+          path="/machines-legacy"
           element={
             <ProtectedRoute requiredRoles={adminManagerRoles}>
               <ShowMachines />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/machines-legacy/create"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <CreateMachine />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="machines-legacy/edit/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <EditMachine />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="machines-legacy/details/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <EditMachine />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Machine CRUD routes with factory context */}
         <Route
           path="/machines/create"
           element={
@@ -273,7 +301,7 @@ function App() {
           }
         />
         <Route
-          path="machines/edit/:id"
+          path="/machines/edit/:id"
           element={
             <ProtectedRoute requiredRoles={adminManagerRoles}>
               <EditMachine />
@@ -281,7 +309,7 @@ function App() {
           }
         />
         <Route
-          path="machines/details/:id"
+          path="/machines/details/:id"
           element={
             <ProtectedRoute requiredRoles={adminManagerRoles}>
               <EditMachine />
@@ -317,13 +345,39 @@ function App() {
 
         {/* Materials routes - Admin and Manager only */}
         <Route
-          path="/materials"
+          path="/materials-legacy"
           element={
             <ProtectedRoute requiredRoles={adminManagerRoles}>
               <MaterialList />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/materials-legacy/create"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <CreateMaterial />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/materials-legacy/edit/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <EditMaterial />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/materials-legacy/details/:id"
+          element={
+            <ProtectedRoute requiredRoles={adminManagerRoles}>
+              <MaterialDetails />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Material CRUD routes with factory context */}
         <Route
           path="/materials/create"
           element={
@@ -349,7 +403,7 @@ function App() {
           }
         />
 
-        {/* Machine Material routes - Admin and Manager only */}
+        {/* Machine Material routes - All users can access */}
         <Route
           path="/machinematerial"
           element={

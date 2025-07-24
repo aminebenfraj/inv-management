@@ -14,7 +14,7 @@ export const apiRequest = async (
 
     const config = {
       method,
-      url: `https://inv-management.onrender.com/${url}`,
+      url: `http://localhost:5000/${url}`,
       headers: {
         Authorization: `Bearer ${token}`,
         ...(isFormData ? {} : { "Content-Type": "application/json" }),

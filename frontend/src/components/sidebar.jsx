@@ -21,6 +21,7 @@ import {
   FileSpreadsheet,
   ListChecks,
   Cog,
+  Building2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -28,11 +29,11 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Input } from "@/components/ui/input"
 
-// Navigation structure based on user's grouping
+// Navigation structure based on user's grouping - FIXED ROUTES
 const navigationItems = [
   {
     id: "machine-dashboard",
-    label: "machine dashboard",
+    label: "Factory Dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",
     isMainPage: true,
@@ -43,6 +44,20 @@ const navigationItems = [
     icon: Database,
     children: [
       {
+        id: "factories",
+        label: "Factories",
+        icon: Building2,
+        path: "/factories",
+        isMainPage: true,
+      },
+      {
+        id: "machines",
+        label: "Machines",
+        icon: Wrench,
+        path: "/machines-legacy",
+        isMainPage: true,
+      },
+      {
         id: "materials",
         label: "Materials",
         icon: Package,
@@ -50,16 +65,10 @@ const navigationItems = [
         isMainPage: true,
       },
       {
-        id: "machines",
-        label: "Machines",
-        icon: Wrench,
-        path: "/machines",
-      },
-      {
-        id: "factories",
-        label: "Factories",
-        icon: LayoutDashboard, // Using LayoutDashboard as a placeholder icon, you can change it if you have a more suitable one.
-        path: "/factories",
+        id: "allocations",
+        label: "Allocations",
+        icon: Layers,
+        path: "/allocations",
         isMainPage: true,
       },
       {
@@ -67,7 +76,6 @@ const navigationItems = [
         label: "Machine Material",
         icon: Layers,
         path: "/machinematerial",
-        isMainPage: true,
       },
       {
         id: "locations",
@@ -89,7 +97,6 @@ const navigationItems = [
       },
     ],
   },
-
   {
     id: "pedido",
     label: "Orders",
@@ -143,25 +150,31 @@ const navigationItems = [
   },
 ]
 
-// Quick access to main pages
+// Quick access to main pages - UPDATED
 const mainPages = [
   {
-    id: "pedido",
-    label: "Orders",
-    icon: ShoppingCart,
-    path: "/pedido",
+    id: "dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    path: "/dashboard",
   },
   {
-    id: "machineMaterial",
-    label: "Machine Material",
-    icon: Layers,
-    path: "/machinematerial",
+    id: "machines",
+    label: "Machines",
+    icon: Wrench,
+    path: "/machines",
   },
   {
     id: "materials",
     label: "Materials",
     icon: Package,
     path: "/materials",
+  },
+  {
+    id: "allocations",
+    label: "Allocations",
+    icon: Layers,
+    path: "/allocations",
   },
 ]
 
@@ -192,7 +205,7 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
     if (hasChanges) {
       setExpandedItems(newExpandedItems)
     }
-  }, [location.pathname])
+  }, [location.pathname, expandedItems])
 
   // Toggle menu item expansion
   const toggleItem = useCallback((itemId) => {
@@ -289,9 +302,9 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
           {!searchTerm && (
             <div className="px-4 py-2 border-b dark:border-zinc-800">
               <h3 className="mb-2 text-xs font-medium tracking-wider uppercase text-slate-500 dark:text-zinc-400">
-                Main Pages
+                Quick Access
               </h3>
-              <div className="grid grid-cols-3 gap-1">
+              <div className="grid grid-cols-2 gap-1">
                 {mainPages.map((page) => (
                   <motion.div key={page.id} whileHover={{ y: -2 }} whileTap={{ y: 0 }}>
                     <Link

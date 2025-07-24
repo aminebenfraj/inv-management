@@ -3,10 +3,10 @@ import { apiRequest } from "../api"
 const BASE_URL = "api/allocate"
 
 // Get all allocations
-export const getAllAllocations = (page = 1, limit = 100) => {
+export const getAllAllocations = (page = 1, limit = 50) => {
   const queryParams = new URLSearchParams({
     page: page.toString(),
-    limit: limit.toString(),
+    limit: Math.min(limit, 50).toString(), // Ensure limit doesn't exceed 50
   })
 
   return apiRequest("GET", `${BASE_URL}/allocates?${queryParams.toString()}`)
@@ -18,13 +18,25 @@ export const updateAllocation = (id, data) => {
 }
 
 // Get allocations for a specific material
-export const getMaterialAllocations = (materialId) => {
-  return apiRequest("GET", `${BASE_URL}/material/${materialId}`)
+export const getMaterialAllocations = (materialId, factory = null) => {
+  const queryParams = new URLSearchParams()
+  if (factory) {
+    queryParams.append("factory", factory)
+  }
+
+  const url = `${BASE_URL}/material/${materialId}${queryParams.toString() ? `?${queryParams.toString()}` : ""}`
+  return apiRequest("GET", url)
 }
 
 // Get stock history for a machine
-export const getMachineStockHistory = (machineId) => {
-  return apiRequest("GET", `${BASE_URL}/machine/${machineId}/history`)
+export const getMachineStockHistory = (machineId, factory = null) => {
+  const queryParams = new URLSearchParams()
+  if (factory) {
+    queryParams.append("factory", factory)
+  }
+
+  const url = `${BASE_URL}/machine/${machineId}/history${queryParams.toString() ? `?${queryParams.toString()}` : ""}`
+  return apiRequest("GET", url)
 }
 
 // Allocate stock to machines
@@ -38,10 +50,10 @@ export const deleteAllocation = (id) => {
 }
 
 // Get allocations by factory ID
-export const getAllocationsByFactory = async (factoryId, page = 1, limit = 10) => {
+export const getAllocationsByFactory = async (factoryId, page = 1, limit = 50) => {
   const queryParams = new URLSearchParams({
     page: page.toString(),
-    limit: limit.toString(),
+    limit: Math.min(limit, 50).toString(), // Ensure limit doesn't exceed 50
   })
 
   const url = `${BASE_URL}/factory/${factoryId}?${queryParams.toString()}`

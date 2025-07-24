@@ -3,7 +3,7 @@ import { apiRequest } from "../api"
 const BASE_URL = "api/machines"
 
 // Get all machines with pagination, search, and filters
-export const getAllMachines = async (page = 1, limit = 10, search = "", filters = {}, sort = {}) => {
+export const getAllMachines = async (page = 1, limit = 50, search = "", filters = {}, sort = {}) => {
   const queryParams = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
@@ -60,6 +60,30 @@ export const getMachineByFactoryAndName = async (factoryId, name) => {
     return await apiRequest("GET", `${BASE_URL}/factory/${factoryId}/name/${name}`)
   } catch (error) {
     console.error(`Error fetching machine by factory ${factoryId} and name ${name}:`, error)
+    throw error
+  }
+}
+
+// Get machines by factory ID - using dedicated endpoint
+export const getMachinesByFactory = async (factoryId, page = 1, limit = 50, search = "", status = "") => {
+  try {
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    })
+
+    if (search) {
+      queryParams.append("search", search)
+    }
+
+    if (status) {
+      queryParams.append("status", status)
+    }
+
+    const url = `${BASE_URL}/factory/${factoryId}?${queryParams.toString()}`
+    return await apiRequest("GET", url)
+  } catch (error) {
+    console.error(`Error fetching machines for factory ${factoryId}:`, error)
     throw error
   }
 }
