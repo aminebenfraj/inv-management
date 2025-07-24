@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import { getUserFactories } from "@/apis/gestionStockApi/factoryApi"
+import { getCurrentUser } from "@/apis/userApi"
 import { getAllMachines } from "@/apis/gestionStockApi/machineApi"
 import { getAllMaterials } from "@/apis/gestionStockApi/materialApi"
 import { getAllAllocations } from "@/apis/gestionStockApi/materialMachineApi"
@@ -35,6 +36,7 @@ import {
   Download,
   ChevronRight,
   Gauge,
+  Shield,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import MainLayout from "@/components/MainLayout"
@@ -73,6 +75,8 @@ const EnhancedFactoryDashboard = () => {
 
   const [factories, setFactories] = useState([])
   const [selectedFactory, setSelectedFactory] = useState(null)
+  const [userRole, setUserRole] = useState(null)
+  const [currentUser, setCurrentUser] = useState(null)
   const [dashboardData, setDashboardData] = useState({
     machines: [],
     materials: [],
@@ -82,6 +86,11 @@ const EnhancedFactoryDashboard = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingData, setIsLoadingData] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(new Date())
+
+  // Check if user is admin based on roles
+  const isAdmin = useMemo(() => {
+    return currentUser?.roles?.includes("Admin") || false
+  }, [currentUser])
 
   // Enhanced analytics with more detailed metrics
   const analytics = useMemo(() => {
@@ -143,6 +152,48 @@ const EnhancedFactoryDashboard = () => {
     }
   }, [dashboardData])
 
+  // Factory-specific analytics for "All Factories" view
+  const factoriesAnalytics = useMemo(() => {
+    if (selectedFactory?._id !== "all" || !isAdmin) return []
+
+    return factories.map((factory) => {
+      const factoryMachines = dashboardData.machines.filter((m) => m.factory?._id === factory._id)
+      const factoryMaterials = dashboardData.materials.filter((m) => m.factory?._id === factory._id)
+      const factoryAllocations = dashboardData.allocations.filter((a) => a.machine?.factory?._id === factory._id)
+
+      const activeMachines = factoryMachines.filter((m) => m.status === "active").length
+      const totalMachines = factoryMachines.length
+      const utilization = totalMachines > 0 ? (activeMachines / totalMachines) * 100 : 0
+
+      const lowStockMaterials = factoryMaterials.filter((m) => m.currentStock <= m.minimumStock).length
+      const totalMaterials = factoryMaterials.length
+      const stockEfficiency = totalMaterials > 0 ? ((totalMaterials - lowStockMaterials) / totalMaterials) * 100 : 0
+
+      const totalValue = factoryMaterials.reduce((sum, m) => sum + m.currentStock * m.price, 0)
+      const totalAllocations = factoryAllocations.length
+
+      return {
+        factory,
+        metrics: {
+          machines: {
+            total: totalMachines,
+            active: activeMachines,
+            utilization,
+          },
+          materials: {
+            total: totalMaterials,
+            lowStock: lowStockMaterials,
+            efficiency: stockEfficiency,
+            totalValue,
+          },
+          allocations: {
+            total: totalAllocations,
+          },
+        },
+      }
+    })
+  }, [dashboardData, factories, selectedFactory, isAdmin])
+
   // Chart data
   const machineStatusChartData = {
     labels: ["Active", "Maintenance", "Inactive"],
@@ -196,7 +247,7 @@ const EnhancedFactoryDashboard = () => {
   }
 
   useEffect(() => {
-    fetchFactories()
+    fetchUserAndFactories()
   }, [])
 
   useEffect(() => {
@@ -205,17 +256,42 @@ const EnhancedFactoryDashboard = () => {
     }
   }, [selectedFactory, timeRange])
 
-  const fetchFactories = async () => {
+  const fetchUserAndFactories = async () => {
     try {
       setIsLoading(true)
-      const data = await getUserFactories()
-      const factoriesArray = Array.isArray(data) ? data : data?.data || []
+
+      // Fetch current user and factories in parallel
+      const [userResponse, factoriesResponse] = await Promise.all([getCurrentUser(), getUserFactories()])
+
+      console.log("User response:", userResponse)
+      console.log("Factories response:", factoriesResponse)
+
+      // Set current user
+      setCurrentUser(userResponse)
+
+      // Determine user role based on roles array
+      const userRoles = userResponse?.roles || []
+      const isUserAdmin = userRoles.includes("Admin")
+      setUserRole(isUserAdmin ? "admin" : "user")
+
+      // Handle factories response
+      const factoriesArray = Array.isArray(factoriesResponse) ? factoriesResponse : factoriesResponse?.data || []
+
       setFactories(factoriesArray)
+
+      // Auto-select factory for non-admin users with single factory access
+      if (!isUserAdmin && factoriesArray.length === 1) {
+        setSelectedFactory(factoriesArray[0])
+        toast({
+          title: "Factory Auto-Selected",
+          description: `Viewing data for ${factoriesArray[0].name}`,
+        })
+      }
     } catch (error) {
-      console.error("Error fetching factories:", error)
+      console.error("Error fetching user and factories:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch authorized factories",
+        description: "Failed to fetch user information and factories",
         variant: "destructive",
       })
     } finally {
@@ -243,11 +319,20 @@ const EnhancedFactoryDashboard = () => {
         filteredAllocations = allocationsData
       }
 
+      // Filter data based on selected factory and user permissions
       if (selectedFactory._id !== "all") {
         filteredMachines = filteredMachines.filter((machine) => machine.factory?._id === selectedFactory._id)
         filteredMaterials = filteredMaterials.filter((material) => material.factory?._id === selectedFactory._id)
         filteredAllocations = filteredAllocations.filter(
           (allocation) => allocation.machine?.factory?._id === selectedFactory._id,
+        )
+      } else if (!isAdmin) {
+        // Non-admin users should never see "all" data, filter by their authorized factories
+        const authorizedFactoryIds = factories.map((f) => f._id)
+        filteredMachines = filteredMachines.filter((machine) => authorizedFactoryIds.includes(machine.factory?._id))
+        filteredMaterials = filteredMaterials.filter((material) => authorizedFactoryIds.includes(material.factory?._id))
+        filteredAllocations = filteredAllocations.filter((allocation) =>
+          authorizedFactoryIds.includes(allocation.machine?.factory?._id),
         )
       }
 
@@ -327,42 +412,53 @@ const EnhancedFactoryDashboard = () => {
                 Factory Management Dashboard
               </motion.h1>
               <p className="text-xl text-muted-foreground">
-                Select from your authorized factories to view comprehensive analytics and insights
+                {isAdmin
+                  ? "Select from all available factories to view comprehensive analytics and insights"
+                  : "Select from your authorized factories to view analytics and insights"}
               </p>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <Shield className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm capitalize text-muted-foreground">
+                  Access Level: {isAdmin ? "Admin" : "User"}
+                </span>
+              </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {/* All Factories Option */}
-              <motion.div
-                whileHover={{ scale: 1.02, y: -5 }}
-                whileTap={{ scale: 0.98 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <Card
-                  className="relative overflow-hidden transition-all duration-300 border-2 border-dashed cursor-pointer border-primary/30 hover:border-primary/60 bg-gradient-to-br from-primary/5 to-primary/10 hover:shadow-xl"
-                  onClick={() => handleFactorySelect({ _id: "all", name: "All Factories" })}
+              {/* All Factories Option - Only for Admin */}
+              {isAdmin && (
+                <motion.div
+                  whileHover={{ scale: 1.02, y: -5 }}
+                  whileTap={{ scale: 0.98 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10" />
-                  <CardHeader className="relative pb-4 text-center">
-                    <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20">
-                      <Building2 className="w-8 h-8 text-primary" />
-                    </div>
-                    <CardTitle className="text-xl">All Factories</CardTitle>
-                    <CardDescription>View consolidated data from all factories</CardDescription>
-                  </CardHeader>
-                  <CardContent className="relative text-center">
-                    <Badge variant="outline" className="bg-primary/10 border-primary/30">
-                      Global Overview
-                    </Badge>
-                    <div className="flex items-center justify-center mt-4 text-sm text-muted-foreground">
-                      <ArrowRight className="w-4 h-4 mr-2" />
-                      Click to access
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  <Card
+                    className="relative overflow-hidden transition-all duration-300 border-2 border-dashed cursor-pointer border-primary/30 hover:border-primary/60 bg-gradient-to-br from-primary/5 to-primary/10 hover:shadow-xl"
+                    onClick={() => handleFactorySelect({ _id: "all", name: "All Factories" })}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10" />
+                    <CardHeader className="relative pb-4 text-center">
+                      <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20">
+                        <Building2 className="w-8 h-8 text-primary" />
+                      </div>
+                      <CardTitle className="text-xl">All Factories</CardTitle>
+                      <CardDescription>View consolidated data from all factories</CardDescription>
+                    </CardHeader>
+                    <CardContent className="relative text-center">
+                      <Badge variant="outline" className="bg-primary/10 border-primary/30">
+                        <Shield className="w-3 h-3 mr-1" />
+                        Admin Access
+                      </Badge>
+                      <div className="flex items-center justify-center mt-4 text-sm text-muted-foreground">
+                        <ArrowRight className="w-4 h-4 mr-2" />
+                        Click to access
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
 
               {/* Individual Factories */}
               {factories.map((factory, index) => (
@@ -372,7 +468,7 @@ const EnhancedFactoryDashboard = () => {
                   whileTap={{ scale: 0.98 }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * (index + 2) }}
+                  transition={{ delay: 0.1 * (index + (isAdmin ? 2 : 1)) }}
                 >
                   <Card
                     className="relative overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-xl bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50 group"
@@ -416,7 +512,7 @@ const EnhancedFactoryDashboard = () => {
                     <p className="mb-6 text-muted-foreground">
                       You don't have access to any factories. Contact your administrator to get factory access.
                     </p>
-                    <Button variant="outline" onClick={fetchFactories}>
+                    <Button variant="outline" onClick={fetchUserAndFactories}>
                       <RefreshCw className="w-4 h-4 mr-2" />
                       Refresh Access
                     </Button>
@@ -436,11 +532,22 @@ const EnhancedFactoryDashboard = () => {
         {/* Enhanced Header */}
         <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
-              {selectedFactory.name} Dashboard
-            </h1>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
+                {selectedFactory.name} Dashboard
+              </h1>
+              {isAdmin && (
+                <Badge variant="outline" className="text-blue-700 border-blue-200 bg-blue-50">
+                  <Shield className="w-3 h-3 mr-1" />
+                  Admin
+                </Badge>
+              )}
+            </div>
             <p className="text-muted-foreground">
-              Comprehensive analytics and insights • Last updated: {lastUpdated.toLocaleTimeString()}
+              {selectedFactory._id === "all"
+                ? "Consolidated analytics from all factories"
+                : "Factory-specific analytics and insights"}{" "}
+              • Last updated: {lastUpdated.toLocaleTimeString()}
             </p>
           </div>
           <div className="flex gap-2">
@@ -474,13 +581,349 @@ const EnhancedFactoryDashboard = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs
+          defaultValue={selectedFactory?._id === "all" && isAdmin ? "factories-overview" : "overview"}
+          className="space-y-6"
+        >
+          <TabsList
+            className={`grid w-full ${selectedFactory?._id === "all" && isAdmin ? "grid-cols-5" : "grid-cols-4"}`}
+          >
+            {selectedFactory?._id === "all" && isAdmin && (
+              <TabsTrigger value="factories-overview">Factories Overview</TabsTrigger>
+            )}
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="machines">Machines</TabsTrigger>
             <TabsTrigger value="materials">Materials</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
+
+          {/* New Factories Overview Tab - Only for Admin viewing All Factories */}
+          {selectedFactory?._id === "all" && isAdmin && (
+            <TabsContent value="factories-overview" className="space-y-6">
+              {/* Factories Summary Cards */}
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {factoriesAnalytics.map((factoryData, index) => (
+                  <motion.div
+                    key={factoryData.factory._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-lg group">
+                      <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-br from-blue-500/5 to-green-500/5 group-hover:opacity-100" />
+                      <CardHeader className="relative pb-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full dark:bg-blue-900/30">
+                              <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-lg">{factoryData.factory.name}</CardTitle>
+                              <CardDescription>{factoryData.factory.description || "Factory location"}</CardDescription>
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleFactorySelect(factoryData.factory)}
+                            className="transition-opacity opacity-0 group-hover:opacity-100"
+                          >
+                            <ArrowRight className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="relative space-y-4">
+                        {/* Machine Metrics */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="flex items-center gap-2">
+                              <Settings className="w-4 h-4 text-blue-500" />
+                              Machines
+                            </span>
+                            <span className="font-medium">{factoryData.metrics.machines.total}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Utilization</span>
+                            <span
+                              className={`font-medium ${factoryData.metrics.machines.utilization > 80 ? "text-green-600" : factoryData.metrics.machines.utilization > 60 ? "text-amber-600" : "text-red-600"}`}
+                            >
+                              {factoryData.metrics.machines.utilization.toFixed(1)}%
+                            </span>
+                          </div>
+                          <Progress value={factoryData.metrics.machines.utilization} className="h-2" />
+                        </div>
+
+                        {/* Material Metrics */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="flex items-center gap-2">
+                              <Package className="w-4 h-4 text-green-500" />
+                              Materials
+                            </span>
+                            <span className="font-medium">{factoryData.metrics.materials.total}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Stock Efficiency</span>
+                            <span
+                              className={`font-medium ${factoryData.metrics.materials.efficiency > 80 ? "text-green-600" : factoryData.metrics.materials.efficiency > 60 ? "text-amber-600" : "text-red-600"}`}
+                            >
+                              {factoryData.metrics.materials.efficiency.toFixed(1)}%
+                            </span>
+                          </div>
+                          <Progress value={factoryData.metrics.materials.efficiency} className="h-2" />
+                        </div>
+
+                        {/* Value and Allocations */}
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-purple-600">
+                              ${factoryData.metrics.materials.totalValue.toLocaleString()}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Material Value</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-amber-600">
+                              {factoryData.metrics.allocations.total}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Allocations</div>
+                          </div>
+                        </div>
+
+                        {/* Status Indicators */}
+                        <div className="flex gap-2 pt-2">
+                          {factoryData.metrics.machines.utilization > 80 && (
+                            <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              High Performance
+                            </Badge>
+                          )}
+                          {factoryData.metrics.materials.lowStock > 0 && (
+                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              Stock Alert
+                            </Badge>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Comparative Analytics */}
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5" />
+                      Factory Performance Comparison
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64">
+                      <Bar
+                        data={{
+                          labels: factoriesAnalytics.map((f) => f.factory.name),
+                          datasets: [
+                            {
+                              label: "Machine Utilization %",
+                              data: factoriesAnalytics.map((f) => f.metrics.machines.utilization),
+                              backgroundColor: "rgba(59, 130, 246, 0.6)",
+                              borderColor: "rgba(59, 130, 246, 1)",
+                              borderWidth: 1,
+                            },
+                            {
+                              label: "Stock Efficiency %",
+                              data: factoriesAnalytics.map((f) => f.metrics.materials.efficiency),
+                              backgroundColor: "rgba(16, 185, 129, 0.6)",
+                              borderColor: "rgba(16, 185, 129, 1)",
+                              borderWidth: 1,
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          scales: {
+                            y: {
+                              beginAtZero: true,
+                              max: 100,
+                            },
+                          },
+                          plugins: {
+                            legend: {
+                              position: "top",
+                            },
+                          },
+                        }}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="w-5 h-5" />
+                      Material Value Distribution
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64">
+                      <Doughnut
+                        data={{
+                          labels: factoriesAnalytics.map((f) => f.factory.name),
+                          datasets: [
+                            {
+                              data: factoriesAnalytics.map((f) => f.metrics.materials.totalValue),
+                              backgroundColor: [
+                                "#3b82f6",
+                                "#10b981",
+                                "#f59e0b",
+                                "#ef4444",
+                                "#8b5cf6",
+                                "#06b6d4",
+                                "#84cc16",
+                                "#f97316",
+                              ],
+                              borderWidth: 2,
+                              borderColor: "#ffffff",
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              position: "bottom",
+                            },
+                            tooltip: {
+                              callbacks: {
+                                label: (context) => `${context.label}: $${context.parsed.toLocaleString()}`,
+                              },
+                            },
+                          },
+                        }}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Summary Statistics */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-5 h-5" />
+                    Global Factory Statistics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-6 md:grid-cols-4">
+                    <div className="p-4 text-center border rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {factoriesAnalytics.reduce((sum, f) => sum + f.metrics.machines.total, 0)}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Total Machines</div>
+                      <div className="mt-1 text-xs text-green-600">
+                        {factoriesAnalytics.reduce((sum, f) => sum + f.metrics.machines.active, 0)} Active
+                      </div>
+                    </div>
+                    <div className="p-4 text-center border rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        {factoriesAnalytics.reduce((sum, f) => sum + f.metrics.materials.total, 0)}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Total Materials</div>
+                      <div className="mt-1 text-xs text-amber-600">
+                        {factoriesAnalytics.reduce((sum, f) => sum + f.metrics.materials.lowStock, 0)} Low Stock
+                      </div>
+                    </div>
+                    <div className="p-4 text-center border rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600">
+                        $
+                        {factoriesAnalytics
+                          .reduce((sum, f) => sum + f.metrics.materials.totalValue, 0)
+                          .toLocaleString()}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Total Value</div>
+                      <div className="mt-1 text-xs text-muted-foreground">Across All Factories</div>
+                    </div>
+                    <div className="p-4 text-center border rounded-lg">
+                      <div className="text-2xl font-bold text-amber-600">
+                        {factoriesAnalytics.reduce((sum, f) => sum + f.metrics.allocations.total, 0)}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Total Allocations</div>
+                      <div className="mt-1 text-xs text-muted-foreground">Active Assignments</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Factory Rankings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Factory Performance Rankings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {factoriesAnalytics
+                      .sort(
+                        (a, b) =>
+                          b.metrics.machines.utilization +
+                          b.metrics.materials.efficiency -
+                          (a.metrics.machines.utilization + a.metrics.materials.efficiency),
+                      )
+                      .map((factoryData, index) => (
+                        <motion.div
+                          key={factoryData.factory._id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-center justify-between p-4 transition-colors border rounded-lg hover:bg-muted/50"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                                index === 0
+                                  ? "bg-yellow-500"
+                                  : index === 1
+                                    ? "bg-gray-400"
+                                    : index === 2
+                                      ? "bg-amber-600"
+                                      : "bg-gray-300"
+                              }`}
+                            >
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="font-medium">{factoryData.factory.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {factoryData.metrics.machines.total} machines • {factoryData.metrics.materials.total}{" "}
+                                materials
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold">
+                              {(
+                                (factoryData.metrics.machines.utilization + factoryData.metrics.materials.efficiency) /
+                                2
+                              ).toFixed(1)}
+                              %
+                            </div>
+                            <div className="text-xs text-muted-foreground">Overall Score</div>
+                          </div>
+                        </motion.div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           <TabsContent value="overview" className="space-y-6">
             {/* Enhanced Key Metrics */}
